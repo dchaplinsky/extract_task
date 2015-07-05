@@ -171,7 +171,7 @@ GROUP_REG1_1 = (
 	(REGISTRY1_1_1,
 	 r'Реєстраційний номер\nоб’єкта нерухомого\nмайна:\n(\d{8,14})\n'),
 	(REGISTRY1_1_2,
-	 r'Об’єкт нерухомого\nмайна:\n(.*Ні|.*Так)'),
+	 r'Об’єкт нерухомого\nмайна:\n(.*Ні|.*Так|.*\n(?:Адреса:))'),
 	(REGISTRY1_1_3,r'Площа:(.*?)\n'),
 	(REGISTRY1_1_4,
 	 r'Кадастровий номер:(\d{10}:\d{2}:\d{3}:\d{4})\n'),
@@ -223,7 +223,7 @@ GROUP_REG2_1 = (
 	(REGISTRY2_1_3,r'Адреса нерухомого\nмайна:[\n|\s](.*?\d{1,5})\n'),
 	(REGISTRY2_1_4,
 	 r'Адреса нерухомого\nмайна:[\n|\s].*?\d{1,5}\n(.*?)\nНомер запису:'),
-	(REGISTRY2_1_5,r'Номер запису: (.*?)\.\n'),
+	(REGISTRY2_1_5,r'Номер запису: (.*?)(\n|ВІДОМОСТІ|$)'),
 )
 
 GROUP_REG2_2 = (
@@ -349,40 +349,17 @@ if __name__ == "__main__":
 					source_file, output_file))
 		with open(output_file,'rb') as f:
 			text = f.read()		#converted text from pdf file
-			text = re.sub(r'стор. \d{1,3} з \d{1,3}|RRP-.*?\n','',text) #deletes junk
+			text = re.sub(r'стор. \d{1,3} з \d{1,3}|RRP-.*?\n|  ','',text) #deletes junk
 			check = separate(text,GROUP_ALL) #first level separation
-			#params of qwery
+			#params of qwerty
 			check[FETCH_PARAMS] = separate(check[FETCH_PARAMS],GROUP_OBJECT)
-			#1
-			check[REGISTRY1] = reg(check[REGISTRY1],GROUP_REG1)
-			#1-1
-			check[REGISTRY1][REGISTRY1_1] = group_reg(check[REGISTRY1][REGISTRY1_1],GROUP_REG1_1)
-			#1-2
-			check[REGISTRY1][REGISTRY1_2] = group_reg(check[REGISTRY1][REGISTRY1_2],GROUP_REG1_2)
-			#1-3
-			check[REGISTRY1][REGISTRY1_3] = group_reg(check[REGISTRY1][REGISTRY1_3],GROUP_REG1_3)
-			#1-4
-			check[REGISTRY1][REGISTRY1_4] = group_reg(check[REGISTRY1][REGISTRY1_4],GROUP_REG1_4)
-			#2
-			check[REGISTRY2] = reg(check[REGISTRY2],GROUP_REG2)
-			#2-1
-			check[REGISTRY2][REGISTRY2_1] = group_reg(check[REGISTRY2][REGISTRY2_1],GROUP_REG2_1)
-			#2-1
-			check[REGISTRY2][REGISTRY2_2] = group_reg(check[REGISTRY2][REGISTRY2_2],GROUP_REG2_2)
-			#3
-			check[REGISTRY3] = reg(check[REGISTRY3],GROUP_REG3)
-			#3-1
-			check[REGISTRY3][REGISTRY3_1] = group_reg(check[REGISTRY3][REGISTRY3_1],GROUP_REG3_1)
-			#3-2
-
-			check[REGISTRY3][REGISTRY3_2] = group_reg(check[REGISTRY3][REGISTRY3_2],GROUP_REG3_2)
-			#4
-			#print check[REGISTRY4]
-			check[REGISTRY4] = reg(check[REGISTRY4],GROUP_REG4)
-			#4-1
-			check[REGISTRY4][REGISTRY4_1] = group_reg(check[REGISTRY4][REGISTRY4_1],GROUP_REG4_1)
-			#4-2
-			check[REGISTRY4][REGISTRY4_2] = group_reg(check[REGISTRY4][REGISTRY4_2],GROUP_REG4_2)
-			
+			#all others groups
+			for i in xrange(1,5):
+				check[eval('REGISTRY'+str(i))] = \
+				reg(check[eval('REGISTRY'+str(i))],eval('GROUP_REG'+str(i)))
+				for y in xrange(1,len(eval('GROUP_REG'+str(i)))+1):
+					check[eval('REGISTRY'+str(i))][eval('REGISTRY'+str(i)+'_'+str(y))] = \
+					group_reg(check[eval('REGISTRY'+str(i))]\
+					[eval('REGISTRY'+str(i)+'_'+str(y))],eval('GROUP_REG'+str(i)+'_'+str(y)))
 			print check
 			#end
