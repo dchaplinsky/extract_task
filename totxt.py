@@ -11,6 +11,8 @@ usage: parser.py source_file output_file
     output_file - path to txt file to store an output information
 """
 
+#first part
+
 FETCH_PARAMS = "Параметри запиту"
 
 OBJECT_ADDRESS = "Адреса / Місцезнаходження"
@@ -22,7 +24,7 @@ REGISTRY1 = "ВІДОМОСТІ З ДЕРЖАВНОГО РЕЄСТРУ РЕЧО�
 REGISTRY1_1 = "Актуальна інформація про об’єкт нерухомого майна"
 
 REGISTRY1_1_1 = "Реєстраційний номер об’єкта нерухомого майна"
-REGISTRY1_1_2 = "Об’єкт нерухомого майна:"
+REGISTRY1_1_2 = "Об’єкт нерухомого майна"
 REGISTRY1_1_3 = "Площа"
 REGISTRY1_1_4 = "Кадастровий номер"
 REGISTRY1_1_5 = "Цільове призначення"
@@ -32,7 +34,7 @@ REGISTRY1_1_7 = "Земельні ділянки місця розташуван
 REGISTRY1_2 = "Актуальна інформація про право власності"
 
 REGISTRY1_2_1 = "Номер запису про право власності"
-REGISTRY1_2_2 = "Дата, час державної реєстрації"
+REGISTRY1_2_2 = "Дата, ччёас державної реєстрації"
 REGISTRY1_2_3 = "Державний реєстратор"
 REGISTRY1_2_4 = "Підстава виникнення права власності"
 REGISTRY1_2_5 = "Підстава внесення запису"
@@ -149,22 +151,36 @@ GROUP_OBJECT = (
 	 r'Кадастровий номер\nземельної ділянки:\n(\d{10}:\d{2}:\d{3}:\d{4})'),
 )
 
-GROUP_REG1 = (
-	(REGISTRY1_1,
-	 r'Реєстраційний номер\nоб’єкта нерухомого\nмайна:\n.*?(?=Реєстраційний|$|Актуальна|відсутні)'),
-	(REGISTRY1_2,
-	 r'Номер запису про право(?:\n| )власності:.*?(?=Номер|$|Актуальна|відсутні)'),
-	(REGISTRY1_3,
-	 r'Номер запису про іпотеку:.*?(?=Номер|$|Актуальна|відсутні)'),
-	(REGISTRY1_4,
-	 r'Номер запису про обтяження:.*?(?=Номер|$|ВІДОМОСТІ|Актуальна|відсутні)'),
+GROUP_OBJECT1 = (
+	(0,
+	 r'(Реєстраційний номер\nоб’єкта нерухомого\nмайна:\n.*?(?=Актуальна інформація про об’єкт нерухомого майна|$))'),
 )
 
-GROUP_REG2 = (
-	(REGISTRY2_1,
-	 r'ВІДОМОСТІ ПРО ОБ’ЄКТ НЕРУХОМОГО МАЙНА\n(.*?)\nВІДОМОСТІ'),
-	(REGISTRY2_2,
-	 r'ВІДОМОСТІ ПРО ПРАВА ВЛАСНОСТІ\n(.*?)\n$'),
+
+GROUP_OBJECT2 = (
+	(0,
+	 r'(ВІДОМОСТІ ПРО ОБ’ЄКТ НЕРУХОМОГО МАЙНА\n.*?(?=ВІДОМОСТІ ПРО ОБ’ЄКТ НЕРУХОМОГО МАЙНА|$))'),
+)
+
+GROUP_OBJECT3 = (
+	(0,
+	 r'(Тип обтяження:.*?(?=Тип обтяження|$))'),
+)
+
+GROUP_OBJECT4 = (
+	(0,
+	 r'(Реєстраційний номер\nобтяження:.*?(?=Реєстраційний номер\nобтяження|$))'),
+)
+
+GROUP_REG1 = (
+	(REGISTRY1_1,
+	 r'(Реєстраційний номер\nоб’єкта нерухомого\nмайна:\n.*?(?=Реєстраційний|$|Актуальна|відсутні))'),
+	(REGISTRY1_2,
+	 r'(Номер запису про право(?:\n| )власності:.*?(?=Номер запису про право власності|$|Актуальна|Відомості.*відсутні))'),
+	(REGISTRY1_3,
+	 r'(Номер запису про(?:\n| )іпотеку:.*?\n(?=Номер|$|Актуальна|відсутні))'),
+	(REGISTRY1_4,
+	 r'(Номер запису про(?:\n| )обтяження:.*?(?:\n|)(?=$|ВІДОМОСТІ|Актуальна|відсутні))'),
 )
 
 GROUP_REG1_1 = (
@@ -195,7 +211,7 @@ GROUP_REG1_2 = (
 )
 
 GROUP_REG1_3 = (
-	(REGISTRY1_3_1,r'Номер запису про іпотеку:(.*?)\n'),
+	(REGISTRY1_3_1,r'Номер запису про(?:\n| )іпотеку:(.*?)\n'),
 	(REGISTRY1_3_2,r'Дата, час державної\nреєстрації:\n(.*? .*?)\n'),
 	(REGISTRY1_3_3,r'Державний реєстратор:(.*?)\nПідстава'),
 	(REGISTRY1_3_4,r'Підстава виникнення\nіпотеки:(.*?)\nПідстава внесення'),
@@ -205,14 +221,21 @@ GROUP_REG1_3 = (
 	(REGISTRY1_3_8,r'Додаткові відомості про\nіпотеку:\n(.*?)\n(Актуальна|Додаткові|Відомості|$)'),
 )
 GROUP_REG1_4 = (
-	(REGISTRY1_4_1,r'Номер запису про обтяження: (.*?)\n'),
+	(REGISTRY1_4_1,r'Номер запису про(?:\n| )обтяження: (.*?)\n'),
 	(REGISTRY1_4_2,r'Дата, час державної\nреєстрації:\n(.*? .*?)\n'),
 	(REGISTRY1_4_3,r'Державний реєстратор: (.*?)\nПідстава'),
 	(REGISTRY1_4_4,r'Підстава виникнення\nобтяження:\n(.*?)\nПідстава внесення'),
 	(REGISTRY1_4_5,r'Підстава внесення\nзапису:\n(.*?)\n(Відомості|Вид|Форма)'),
 	(REGISTRY1_4_6,r'Вид обтяження: (.*?)\n(Відомості|$)'),
-	(REGISTRY1_4_7,r'Відомості про суб’єктів\nобтяження:(.*?)(Відомості|Вид|Опис|Особа|$)'),
+	(REGISTRY1_4_7,r'Відомості про суб’єктів\nобтяження:(.*?)($|ВІДОМОСТІ|Відомості|Вид|Опис)'),
 	(REGISTRY1_4_8,r'Відомості про реєстрацію\nдо 01.01.2013р.:\n(.*?)(Відомості|Актуальна|Зміст|$)'),
+)
+
+GROUP_REG2 = (
+	(REGISTRY2_1,
+	 r'ВІДОМОСТІ ПРО ОБ’ЄКТ НЕРУХОМОГО МАЙНА\n(.*?)\nВІДОМОСТІ'),
+	(REGISTRY2_2,
+	 r'ВІДОМОСТІ ПРО ПРАВА ВЛАСНОСТІ\n(.*?)$'),
 )
 
 GROUP_REG2_1 = (
@@ -269,9 +292,9 @@ GROUP_REG3_2 = (
 
 GROUP_REG4 = (
 	(REGISTRY4_1,
-	 r'(Реєстраційний номер.*)\n(?:ВІДМІТКА|$)'),
+	 r'(Реєстраційний номер.*?)(?:\nВІДМІТКА|$)'),
 	(REGISTRY4_2,
-	 r'ВІДМІТКА ПРО ПЕРЕНЕСЕННЯ ЗАПИСУ\nДО ДЕРЖАВНОГО РЕЄСТРУ РЕЧОВИХ ПРАВ НА НЕРУХОМЕ МАЙНО\n(.*?)$'),
+	 r'ВІДМІТКА ПРО ПЕРЕНЕСЕННЯ ЗАПИСУ\nДО ДЕРЖАВНОГО РЕЄСТРУ РЕЧОВИХ ПРАВ НА НЕРУХОМЕ МАЙНО\n(.*?)(Реєстраційний номер\nобтяження|$)'),
 )
 
 GROUP_REG4_1 = (
@@ -311,22 +334,21 @@ def separate(data,GROUP_PARAMS):
 		for param1,param2 in [group]:
 			p = re.search(param2,data,re.U|re.S)
 			dic[param1] = p.group(1) if p else "None"
-	return dic
 
-def group_reg(data,GROUP_PARAMS):
-	lst = []
-	for i in xrange(len(data)):
-		if data[i]:
-			lst.append(separate(data[i],GROUP_PARAMS))
-	return lst
+	return dic
 
 def reg(data,GROUP_PARAMS):
 	dic = {}
 	for group in GROUP_PARAMS:
 		for param1,param2 in [group]:
 			p = re.findall(param2,data,re.U|re.S)
-			dic[param1] = p if p else "None"	
+			dic[param1] = p if p else []
 	return dic
+
+
+def reg2(data,GROUP_PARAMS):
+	p = re.findall(GROUP_PARAMS[0][1],data,re.U|re.S)
+	return p
 
 
 if __name__ == "__main__":
@@ -354,12 +376,42 @@ if __name__ == "__main__":
 			#params of qwerty
 			check[FETCH_PARAMS] = separate(check[FETCH_PARAMS],GROUP_OBJECT)
 			#all others groups
-			for i in xrange(1,5):
-				check[eval('REGISTRY'+str(i))] = \
-				reg(check[eval('REGISTRY'+str(i))],eval('GROUP_REG'+str(i)))
-				for y in xrange(1,len(eval('GROUP_REG'+str(i)))+1):
-					check[eval('REGISTRY'+str(i))][eval('REGISTRY'+str(i)+'_'+str(y))] = \
-					group_reg(check[eval('REGISTRY'+str(i))]\
-					[eval('REGISTRY'+str(i)+'_'+str(y))],eval('GROUP_REG'+str(i)+'_'+str(y)))
+			check[REGISTRY1] = reg2(check[REGISTRY1],GROUP_OBJECT1)
+			check[REGISTRY2] = reg2(check[REGISTRY2],GROUP_OBJECT2)
+			check[REGISTRY3] = reg2(check[REGISTRY3],GROUP_OBJECT3)
+			check[REGISTRY4] = reg2(check[REGISTRY4],GROUP_OBJECT4)
+
+			for i in xrange(len(check[REGISTRY1])):
+				check[REGISTRY1][i] = reg(check[REGISTRY1][i],GROUP_REG1) 
+				for y in xrange(len(check[REGISTRY1][i][REGISTRY1_1])):
+					check[REGISTRY1][i][REGISTRY1_1][y] = separate(check[REGISTRY1][i][REGISTRY1_1][y],GROUP_REG1_1)
+				for y in xrange(len(check[REGISTRY1][i][REGISTRY1_2])):
+					check[REGISTRY1][i][REGISTRY1_2][y] = separate(check[REGISTRY1][i][REGISTRY1_2][y],GROUP_REG1_2)
+				for y in xrange(len(check[REGISTRY1][i][REGISTRY1_3])):
+					check[REGISTRY1][i][REGISTRY1_3][y] = separate(check[REGISTRY1][i][REGISTRY1_3][y],GROUP_REG1_3)
+				for y in xrange(len(check[REGISTRY1][i][REGISTRY1_4])):
+					check[REGISTRY1][i][REGISTRY1_4][y] = separate(check[REGISTRY1][i][REGISTRY1_4][y],GROUP_REG1_4)
+
+			for i in xrange(len(check[REGISTRY2])):
+				check[REGISTRY2][i] = reg(check[REGISTRY2][i],GROUP_REG2)
+				for y in xrange(len(check[REGISTRY2][i][REGISTRY2_1])):
+					check[REGISTRY2][i][REGISTRY2_1][y] = separate(check[REGISTRY2][i][REGISTRY2_1][y],GROUP_REG2_1)
+				for y in xrange(len(check[REGISTRY2][i][REGISTRY2_2])):
+					check[REGISTRY2][i][REGISTRY2_2][y] = separate(check[REGISTRY2][i][REGISTRY2_2][y],GROUP_REG2_2)
+
+			for i in xrange(len(check[REGISTRY3])):
+				check[REGISTRY3][i] = reg(check[REGISTRY3][i],GROUP_REG3)
+				for y in xrange(len(check[REGISTRY3][i][REGISTRY3_1])):
+					check[REGISTRY3][i][REGISTRY3_1][y] = separate(check[REGISTRY3][i][REGISTRY3_1][y],GROUP_REG3_1)
+				for y in xrange(len(check[REGISTRY3][i][REGISTRY3_2])):
+					check[REGISTRY3][i][REGISTRY3_2][y] = separate(check[REGISTRY3][i][REGISTRY3_2][y],GROUP_REG3_2)
+
+			for i in xrange(len(check[REGISTRY4])):
+				check[REGISTRY4][i] = reg(check[REGISTRY4][i],GROUP_REG4)
+				for y in xrange(len(check[REGISTRY4][i][REGISTRY4_1])):
+					check[REGISTRY4][i][REGISTRY4_1][y] = separate(check[REGISTRY4][i][REGISTRY4_1][y],GROUP_REG4_1)
+				for y in xrange(len(check[REGISTRY4][i][REGISTRY4_2])):
+					check[REGISTRY4][i][REGISTRY4_2][y] = separate(check[REGISTRY4][i][REGISTRY4_2][y],GROUP_REG4_2)
+			
 			print check
 			#end
