@@ -11,8 +11,6 @@ usage: parser.py source_file output_file
     output_file - path to txt file to store an output information
 """
 
-#first part
-
 FETCH_PARAMS = "Параметри запиту"
 
 OBJECT_ADDRESS = "Адреса / Місцезнаходження"
@@ -34,7 +32,7 @@ REGISTRY1_1_7 = "Земельні ділянки місця розташуван
 REGISTRY1_2 = "Актуальна інформація про право власності"
 
 REGISTRY1_2_1 = "Номер запису про право власності"
-REGISTRY1_2_2 = "Дата, ччёас державної реєстрації"
+REGISTRY1_2_2 = "Дата, час державної реєстрації"
 REGISTRY1_2_3 = "Державний реєстратор"
 REGISTRY1_2_4 = "Підстава виникнення права власності"
 REGISTRY1_2_5 = "Підстава внесення запису"
@@ -132,6 +130,26 @@ REGISTRY4_2_2 = "Дата перенесення"
 REGISTRY4_2_3 = "Запис"
 
 
+GROUP_OBJECT1 = (
+	(0,
+	 r'(Реєстраційний номер\nоб’єкта нерухомого\nмайна:\n.*?(?=Актуальна інформація про об’єкт нерухомого майна|$))'),
+)
+
+GROUP_OBJECT2 = (
+	(0,
+	 r'(ВІДОМОСТІ ПРО ОБ’ЄКТ НЕРУХОМОГО МАЙНА\n.*?(?=ВІДОМОСТІ ПРО ОБ’ЄКТ НЕРУХОМОГО МАЙНА|$))'),
+)
+
+GROUP_OBJECT3 = (
+	(0,
+	 r'(Тип обтяження:.*?(?=Тип обтяження|$))'),
+)
+
+GROUP_OBJECT4 = (
+	(0,
+	 r'(Реєстраційний номер\nобтяження:.*?(?=Реєстраційний номер\nобтяження|$))'),
+)
+
 GROUP_ALL = (
 	(FETCH_PARAMS,r'Параметри запиту(.*?)ВІДОМОСТІ'),
 	(REGISTRY1,
@@ -149,27 +167,6 @@ GROUP_OBJECT = (
 	 r'Адреса /\nМісцезнаходження:\n(.*)[^\n]*'),
 	(OBJECT_KOD,
 	 r'Кадастровий номер\nземельної ділянки:\n(\d{10}:\d{2}:\d{3}:\d{4})'),
-)
-
-GROUP_OBJECT1 = (
-	(0,
-	 r'(Реєстраційний номер\nоб’єкта нерухомого\nмайна:\n.*?(?=Актуальна інформація про об’єкт нерухомого майна|$))'),
-)
-
-
-GROUP_OBJECT2 = (
-	(0,
-	 r'(ВІДОМОСТІ ПРО ОБ’ЄКТ НЕРУХОМОГО МАЙНА\n.*?(?=ВІДОМОСТІ ПРО ОБ’ЄКТ НЕРУХОМОГО МАЙНА|$))'),
-)
-
-GROUP_OBJECT3 = (
-	(0,
-	 r'(Тип обтяження:.*?(?=Тип обтяження|$))'),
-)
-
-GROUP_OBJECT4 = (
-	(0,
-	 r'(Реєстраційний номер\nобтяження:.*?(?=Реєстраційний номер\nобтяження|$))'),
 )
 
 GROUP_REG1 = (
@@ -359,7 +356,6 @@ if __name__ == "__main__":
 	elif len(sys.argv) > 2: 
 		source_file = sys.argv[1]
 		output_file = sys.argv[2]
-
 		"""
 		pdftotext - is installed poppler-utils package for PDF to text conversion;
 
@@ -370,48 +366,36 @@ if __name__ == "__main__":
 		os.system(('pdftotext -raw -nopgbrk {0} {1}').format( 
 					source_file, output_file))
 		with open(output_file,'rb') as f:
-			text = f.read()		#converted text from pdf file
-			text = re.sub(r'стор. \d{1,3} з \d{1,3}|RRP-.*?\n|  ','',text) #deletes junk
-			check = separate(text,GROUP_ALL) #first level separation
-			#params of qwerty
-			check[FETCH_PARAMS] = separate(check[FETCH_PARAMS],GROUP_OBJECT)
-			#all others groups
-			check[REGISTRY1] = reg2(check[REGISTRY1],GROUP_OBJECT1)
-			check[REGISTRY2] = reg2(check[REGISTRY2],GROUP_OBJECT2)
-			check[REGISTRY3] = reg2(check[REGISTRY3],GROUP_OBJECT3)
-			check[REGISTRY4] = reg2(check[REGISTRY4],GROUP_OBJECT4)
+			#converted text from pdf file
+			text = f.read()		
+			#deletes junk
+			text = re.sub(r'стор. \d{1,3} з \d{1,3}|RRP-.*?\n|  ','',text) 
+			#first level separation
+			check = separate(text,GROUP_ALL) 
+			#gets params of qwerty
+			check[FETCH_PARAMS] = separate(check[FETCH_PARAMS],GROUP_OBJECT) 
+			#gets all possible records for each group in 'check' dictionary
+			groups = [(REGISTRY1,GROUP_OBJECT1),(REGISTRY2,GROUP_OBJECT2),
+					  (REGISTRY3,GROUP_OBJECT3),(REGISTRY4,GROUP_OBJECT4)
+			]
+			for group in groups:
+				check[group[0]] = reg2(check[group[0]],group[1])
+			#first level extractions for each group in 'check' dictionary
+			dic = {
+				REGISTRY1: [GROUP_REG1,[(REGISTRY1_1,GROUP_REG1_1),(REGISTRY1_2,GROUP_REG1_2),
+						    (REGISTRY1_3,GROUP_REG1_3),(REGISTRY1_4,GROUP_REG1_4)]],
+				REGISTRY2: [GROUP_REG2,[(REGISTRY2_1,GROUP_REG2_1),(REGISTRY2_2,GROUP_REG2_2)]],
+				REGISTRY3: [GROUP_REG3,[(REGISTRY3_1,GROUP_REG3_1),(REGISTRY3_2,GROUP_REG3_2)]],
+				REGISTRY4: [GROUP_REG4,[(REGISTRY4_1,GROUP_REG4_1),(REGISTRY4_2,GROUP_REG4_2)]],
 
-			for i in xrange(len(check[REGISTRY1])):
-				check[REGISTRY1][i] = reg(check[REGISTRY1][i],GROUP_REG1) 
-				for y in xrange(len(check[REGISTRY1][i][REGISTRY1_1])):
-					check[REGISTRY1][i][REGISTRY1_1][y] = separate(check[REGISTRY1][i][REGISTRY1_1][y],GROUP_REG1_1)
-				for y in xrange(len(check[REGISTRY1][i][REGISTRY1_2])):
-					check[REGISTRY1][i][REGISTRY1_2][y] = separate(check[REGISTRY1][i][REGISTRY1_2][y],GROUP_REG1_2)
-				for y in xrange(len(check[REGISTRY1][i][REGISTRY1_3])):
-					check[REGISTRY1][i][REGISTRY1_3][y] = separate(check[REGISTRY1][i][REGISTRY1_3][y],GROUP_REG1_3)
-				for y in xrange(len(check[REGISTRY1][i][REGISTRY1_4])):
-					check[REGISTRY1][i][REGISTRY1_4][y] = separate(check[REGISTRY1][i][REGISTRY1_4][y],GROUP_REG1_4)
-
-			for i in xrange(len(check[REGISTRY2])):
-				check[REGISTRY2][i] = reg(check[REGISTRY2][i],GROUP_REG2)
-				for y in xrange(len(check[REGISTRY2][i][REGISTRY2_1])):
-					check[REGISTRY2][i][REGISTRY2_1][y] = separate(check[REGISTRY2][i][REGISTRY2_1][y],GROUP_REG2_1)
-				for y in xrange(len(check[REGISTRY2][i][REGISTRY2_2])):
-					check[REGISTRY2][i][REGISTRY2_2][y] = separate(check[REGISTRY2][i][REGISTRY2_2][y],GROUP_REG2_2)
-
-			for i in xrange(len(check[REGISTRY3])):
-				check[REGISTRY3][i] = reg(check[REGISTRY3][i],GROUP_REG3)
-				for y in xrange(len(check[REGISTRY3][i][REGISTRY3_1])):
-					check[REGISTRY3][i][REGISTRY3_1][y] = separate(check[REGISTRY3][i][REGISTRY3_1][y],GROUP_REG3_1)
-				for y in xrange(len(check[REGISTRY3][i][REGISTRY3_2])):
-					check[REGISTRY3][i][REGISTRY3_2][y] = separate(check[REGISTRY3][i][REGISTRY3_2][y],GROUP_REG3_2)
-
-			for i in xrange(len(check[REGISTRY4])):
-				check[REGISTRY4][i] = reg(check[REGISTRY4][i],GROUP_REG4)
-				for y in xrange(len(check[REGISTRY4][i][REGISTRY4_1])):
-					check[REGISTRY4][i][REGISTRY4_1][y] = separate(check[REGISTRY4][i][REGISTRY4_1][y],GROUP_REG4_1)
-				for y in xrange(len(check[REGISTRY4][i][REGISTRY4_2])):
-					check[REGISTRY4][i][REGISTRY4_2][y] = separate(check[REGISTRY4][i][REGISTRY4_2][y],GROUP_REG4_2)
+			}
+			for key in dic.keys():
+				for i in xrange(len(check[key])):
+					check[key][i] = reg(check[key][i],dic[key][0]) 
+					groups = dic[key][1]
+					for group in groups:
+						for y in xrange(len(check[key][i][group[0]])):
+							check[key][i][group[0]][y] = separate(check[key][i][group[0]][y],group[1])
 			
 			print check
 			#end
