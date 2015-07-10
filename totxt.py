@@ -348,6 +348,30 @@ def reg2(data,GROUP_PARAMS):
 	return p
 
 
+def some(lst):
+	result = ""
+	for elem in lst:
+		elem = list(elem)
+		if elem[0] != 'None':
+			elem[0] = elem[0].replace('\n',' ')
+			if elem[1] == 's':
+				result += elem[0].split(',')[0] + "; "
+			elif elem[1] == 'r':
+				result += elem[0].replace(
+										"Загальна площа (кв.м)", "Заг.пл.").\
+										replace("Житлова площа (кв.м)",
+										"Житл.пл.") + "; "
+			elif elem[1] == 't':
+				result += elem[0][:10] + "; "
+			elif elem[1] == 'k':
+				p = re.search(r'Іпотекодавець:(.*?) (?:Іпотекодержатель|Майновий поручитель)',
+								elem[0],re.U|re.S)
+				if p:
+					result += p.group(1) + "; "
+			else:
+				result += elem[0] + "; "
+	return result
+
 if __name__ == "__main__":
 	source_file = ''
 	output_file = ''
@@ -387,7 +411,6 @@ if __name__ == "__main__":
 				REGISTRY2: [GROUP_REG2,[(REGISTRY2_1,GROUP_REG2_1),(REGISTRY2_2,GROUP_REG2_2)]],
 				REGISTRY3: [GROUP_REG3,[(REGISTRY3_1,GROUP_REG3_1),(REGISTRY3_2,GROUP_REG3_2)]],
 				REGISTRY4: [GROUP_REG4,[(REGISTRY4_1,GROUP_REG4_1),(REGISTRY4_2,GROUP_REG4_2)]],
-
 			}
 			for key in dic.keys():
 				for i in xrange(len(check[key])):
@@ -395,7 +418,124 @@ if __name__ == "__main__":
 					groups = dic[key][1]
 					for group in groups:
 						for y in xrange(len(check[key][i][group[0]])):
-							check[key][i][group[0]][y] = separate(check[key][i][group[0]][y],group[1])
-			
-			print check
+							check[key][i][group[0]][y] = \
+							separate(check[key][i][group[0]][y],group[1])
+			#second part 
+			#first table
+			check1 = [[],[]]
+			for i in xrange(len(check[REGISTRY1])):
+				dic = {}
+				dic['Параметри запиту'] = (
+						check[FETCH_PARAMS][OBJECT_ADDRESS] 
+						if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
+						else check[FETCH_PARAMS][OBJECT_ADDRESS]
+				)
+				#a list of tuples containing fields of record and rule to process that string
+				a = [(check[REGISTRY1][i][REGISTRY1_1][0][REGISTRY1_1_2],'s'),
+					 (check[REGISTRY1][i][REGISTRY1_1][0][REGISTRY1_1_3],'r'),
+					 (check[REGISTRY1][i][REGISTRY1_1][0][REGISTRY1_1_5],''),
+					 (check[REGISTRY1][i][REGISTRY1_1][0][REGISTRY1_1_7],'')
+				]
+				if check[REGISTRY2]:
+					a.append((check[REGISTRY2][0][REGISTRY2_1][0][REGISTRY2_1_2],''))
+					a.append((check[REGISTRY2][0][REGISTRY2_1][0][REGISTRY2_1_4],''))
+				dic['Характеристики нерухомості'] = some(a)
+
+				a = [(check[REGISTRY1][i][REGISTRY1_2][0][REGISTRY1_2_2],'t')
+				]
+				if check[REGISTRY2]:
+					a.append((check[REGISTRY2][0][REGISTRY2_2][0][REGISTRY2_2_1],''))
+				dic['Дата регистрации'] = some(a)
+
+				a = [(check[REGISTRY1][i][REGISTRY1_2][0][REGISTRY1_2_4],'s')
+				]
+				if check[REGISTRY2]:
+					a.append((check[REGISTRY2][0][REGISTRY2_2][0][REGISTRY2_2_6],'s'))
+				dic['Підстава власності'] = some(a)
+
+				a = [(check[REGISTRY1][i][REGISTRY1_2][0][REGISTRY1_2_6],'')
+				]
+				if check[REGISTRY2]:
+					a.append((check[REGISTRY2][0][REGISTRY2_2][0][REGISTRY2_2_4],''))
+				dic['Форма власності'] = some(a)
+
+				a = [(check[REGISTRY1][i][REGISTRY1_2][0][REGISTRY1_2_7],'')
+				]
+				if check[REGISTRY2]:
+					a.append((check[REGISTRY2][0][REGISTRY2_2][0][REGISTRY2_2_5],''))
+				dic['Частка'] = some(a)
+
+				a = [(check[REGISTRY1][i][REGISTRY1_2][0][REGISTRY1_2_8],'')
+				]
+				if check[REGISTRY2]:
+					a.append((check[REGISTRY2][0][REGISTRY2_2][0][REGISTRY2_2_3],''))
+				dic['Власник'] = some(a)
+
+				check1[0].append(dic)
+			#second table
+			for i in xrange(len(check[REGISTRY1])):
+				for y in xrange(len(check[REGISTRY1][i][REGISTRY1_3])):
+					dic = {}
+					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_2],'t'),
+					#!!!
+					]
+					if check[REGISTRY3]:
+						a.append((check[REGISTRY3][0][REGISTRY3_2][0][REGISTRY3_2_3],'t'))
+						a.append((check[REGISTRY3][0][REGISTRY3_1][0][REGISTRY3_1_2],'t'))
+					if check[REGISTRY4]:
+						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_3],'t'))
+						a.append((check[REGISTRY4][0][REGISTRY4_2][0][REGISTRY4_2_2],'t'))
+					dic['Дата регистрации'] = some(a)
+
+					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_4],'s'),
+					#!!!!!!
+					]
+					if check[REGISTRY3]:
+						a.append((check[REGISTRY3][0][REGISTRY3_2][0][REGISTRY3_2_4],'s'))
+					if check[REGISTRY4]:
+						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_4],'s'))
+					dic['Причина обтяження'] = some(a)
+
+					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_6],'s'),
+					#!!!!
+					]
+					if check[REGISTRY3]:
+						a.append((check[REGISTRY3][0][REGISTRY3_2][0][REGISTRY3_2_1],''))
+						a.append((check[REGISTRY3][0][REGISTRY3_1][0][REGISTRY3_1_3],''))
+					if check[REGISTRY4]:
+						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_2],''))
+						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_8],''))
+						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_10],''))
+						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_9],''))
+						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_11],''))
+						a.append((check[REGISTRY4][0][REGISTRY4_2][0][REGISTRY4_2_3],''))
+					dic['Деталі'] = some(a)
+
+					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_4],'s'),
+					]
+                    #!!!
+					dic["Суб'єкти обтяження"] = some(a)
+
+					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'), 
+					]
+					if check[REGISTRY3]:
+						a.append((check[REGISTRY3][0][REGISTRY3_2][0][REGISTRY3_2_7],''))
+					if check[REGISTRY4]:
+						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_6],''))
+					dic['Заявник'] = some(a)
+
+					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'), 
+					]
+					if check[REGISTRY3]:
+						a.append((check[REGISTRY3][0][REGISTRY3_2][0][REGISTRY3_2_6],''))
+					if check[REGISTRY4]:
+						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_7],''))
+					dic['Власник'] = some(a)
+
+					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'), 
+					]
+					dic['Поручитель'] = some(a)
+
+					check1[1].append(dic)
+			print check1
 			#end
