@@ -140,15 +140,28 @@ GROUP_OBJECT2 = (
 	(0,
 	 r'(ВІДОМОСТІ ПРО ОБ’ЄКТ НЕРУХОМОГО МАЙНА\n.*?(?=ВІДОМОСТІ ПРО ОБ’ЄКТ НЕРУХОМОГО МАЙНА|$))'),
 )
+GROUP_OBJECT2_2 = (
+	(0,
+	 r'(Дата прийняття рішення\nпро державну\nреєстрацію:\n.*?(?=Дата прийняття рішення\nпро державну\nреєстрацію:\n|$))'),
+)
 
 GROUP_OBJECT3 = (
 	(0,
 	 r'(Тип обтяження:.*?(?=Тип обтяження|$))'),
 )
+GROUP_OBJECT3_2 = (
+	(0,
+	 r'(Тип обтяження:.*?(?=Тип обтяження|ВІДМІТКА ПРО ПЕРЕНЕСЕННЯ ЗАПИСУ|$))'),
+)
 
 GROUP_OBJECT4 = (
 	(0,
 	 r'(Реєстраційний номер\nобтяження:.*?(?=Реєстраційний номер\nобтяження|$))'),
+)
+
+GROUP_OBJECT4_1 = (
+	(0,
+	 r'(Реєстраційний номер\n.*?(?=ВІДМІТКА ПРО ПЕРЕНЕСЕННЯ|Реєстраційний номер|$))'),
 )
 
 GROUP_ALL = (
@@ -335,7 +348,6 @@ def separate(data,GROUP_PARAMS):
 		for param1,param2 in [group]:
 			p = re.search(param2,data,re.U|re.S)
 			dic[param1] = p.group(1) if p else "None"
-
 	return dic
 
 def second_lvl_extraction(data,GROUP_PARAMS):
@@ -430,9 +442,24 @@ if __name__ == "__main__":
 					check[key][i] = second_lvl_extraction(check[key][i],dic[key][0]) 
 					groups = dic[key][1]
 					for group in groups:
+						if group[0] == REGISTRY2_2:
+							check[key][i][group[0]] = \
+								first_lvl_extraction(check[key][i][group[0]][0],
+														GROUP_OBJECT2_2)
+						#special fields that need preprocess extractions
+						if group[0] == REGISTRY4_1:
+							check[key][i][group[0]] = \
+								first_lvl_extraction(check[key][i][group[0]][0],
+														GROUP_OBJECT4_1)
+						if group[0] == REGISTRY3_2:
+							check[key][i][group[0]] = \
+								first_lvl_extraction(check[key][i][group[0]][0],
+														GROUP_OBJECT3_2)
+						#
 						for y in xrange(len(check[key][i][group[0]])):
 							check[key][i][group[0]][y] = \
 							separate(check[key][i][group[0]][y],group[1])
+
 			#second part 
 			#first table
 			check1 = [[],[]]
