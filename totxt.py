@@ -326,6 +326,10 @@ GROUP_REG4_2 = (
 
 
 def separate(data,GROUP_PARAMS):
+
+	"""simple extraction in format of dictionary
+
+	"""
 	dic = {}
 	for group in GROUP_PARAMS:
 		for param1,param2 in [group]:
@@ -334,7 +338,13 @@ def separate(data,GROUP_PARAMS):
 
 	return dic
 
-def reg(data,GROUP_PARAMS):
+def second_lvl_extraction(data,GROUP_PARAMS):
+
+	""" returns a dictionary
+			key - keyword for a group
+			value - list of matches
+
+	"""
 	dic = {}
 	for group in GROUP_PARAMS:
 		for param1,param2 in [group]:
@@ -342,11 +352,15 @@ def reg(data,GROUP_PARAMS):
 			dic[param1] = p if p else []
 	return dic
 
-def reg2(data,GROUP_PARAMS):
+def first_lvl_extraction(data,GROUP_PARAMS):
+	
+	"""returns a simple list of matches
+
+	"""
 	p = re.findall(GROUP_PARAMS[0][1],data,re.U|re.S)
 	return p
 
-def some(lst):
+def recieve_value(lst):
 	result = ""
 	for elem in lst:
 		elem = list(elem)
@@ -358,7 +372,8 @@ def some(lst):
 				result += elem[0].replace(
 										"Загальна площа (кв.м)", "Заг.пл.").\
 										replace("житлова площа (кв.м)",
-										"Житл.пл.") + "; "
+										"Житл.пл.").replace(
+										"Житлова площа (кв.м)","Житл.пл.") + "; "
 			elif elem[1] == 't':
 				result += elem[0][:10] + "; "
 			elif elem[1] == 'k':
@@ -401,7 +416,7 @@ if __name__ == "__main__":
 					  (REGISTRY3,GROUP_OBJECT3),(REGISTRY4,GROUP_OBJECT4)
 			]
 			for group in groups:
-				check[group[0]] = reg2(check[group[0]],group[1])
+				check[group[0]] = first_lvl_extraction(check[group[0]],group[1])
 			#first level extractions for each group in 'check' dictionary
 			dic = {
 				REGISTRY1: [GROUP_REG1,[(REGISTRY1_1,GROUP_REG1_1),(REGISTRY1_2,GROUP_REG1_2),
@@ -412,7 +427,7 @@ if __name__ == "__main__":
 			}
 			for key in dic.keys():
 				for i in xrange(len(check[key])):
-					check[key][i] = reg(check[key][i],dic[key][0]) 
+					check[key][i] = second_lvl_extraction(check[key][i],dic[key][0]) 
 					groups = dic[key][1]
 					for group in groups:
 						for y in xrange(len(check[key][i][group[0]])):
@@ -437,37 +452,37 @@ if __name__ == "__main__":
 				if check[REGISTRY2]:
 					a.append((check[REGISTRY2][0][REGISTRY2_1][0][REGISTRY2_1_2],''))
 					a.append((check[REGISTRY2][0][REGISTRY2_1][0][REGISTRY2_1_4],''))
-				dic['Характеристики нерухомості'] = some(a)
+				dic['Характеристики нерухомості'] = recieve_value(a)
 
 				a = [(check[REGISTRY1][i][REGISTRY1_2][0][REGISTRY1_2_2],'t')
 				]
 				if check[REGISTRY2]:
 					a.append((check[REGISTRY2][0][REGISTRY2_2][0][REGISTRY2_2_1],''))
-				dic['Дата регистрации'] = some(a)
+				dic['Дата регистрации'] = recieve_value(a)
 
 				a = [(check[REGISTRY1][i][REGISTRY1_2][0][REGISTRY1_2_4],'s')
 				]
 				if check[REGISTRY2]:
 					a.append((check[REGISTRY2][0][REGISTRY2_2][0][REGISTRY2_2_6],'s'))
-				dic['Підстава власності'] = some(a)
+				dic['Підстава власності'] = recieve_value(a)
 
 				a = [(check[REGISTRY1][i][REGISTRY1_2][0][REGISTRY1_2_6],'')
 				]
 				if check[REGISTRY2]:
 					a.append((check[REGISTRY2][0][REGISTRY2_2][0][REGISTRY2_2_4],''))
-				dic['Форма власності'] = some(a)
+				dic['Форма власності'] = recieve_value(a)
 
 				a = [(check[REGISTRY1][i][REGISTRY1_2][0][REGISTRY1_2_7],'')
 				]
 				if check[REGISTRY2]:
 					a.append((check[REGISTRY2][0][REGISTRY2_2][0][REGISTRY2_2_5],''))
-				dic['Частка'] = some(a)
+				dic['Частка'] = recieve_value(a)
 
 				a = [(check[REGISTRY1][i][REGISTRY1_2][0][REGISTRY1_2_8],'')
 				]
 				if check[REGISTRY2]:
 					a.append((check[REGISTRY2][0][REGISTRY2_2][0][REGISTRY2_2_3],''))
-				dic['Власник'] = some(a)
+				dic['Власник'] = recieve_value(a)
 
 				check1[0].append(dic)
 			#second table
@@ -483,7 +498,7 @@ if __name__ == "__main__":
 					if check[REGISTRY4]:
 						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_3],'t'))
 						a.append((check[REGISTRY4][0][REGISTRY4_2][0][REGISTRY4_2_2],'t'))
-					dic['Дата регистрации'] = some(a)
+					dic['Дата регистрации'] = recieve_value(a)
 
 					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_4],'s'),
 					#!!!!!!
@@ -492,7 +507,7 @@ if __name__ == "__main__":
 						a.append((check[REGISTRY3][0][REGISTRY3_2][0][REGISTRY3_2_4],'s'))
 					if check[REGISTRY4]:
 						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_4],'s'))
-					dic['Причина обтяження'] = some(a)
+					dic['Причина обтяження'] = recieve_value(a)
 
 					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_6],'s'),
 					#!!!!
@@ -507,12 +522,12 @@ if __name__ == "__main__":
 						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_9],''))
 						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_11],''))
 						a.append((check[REGISTRY4][0][REGISTRY4_2][0][REGISTRY4_2_3],''))
-					dic['Деталі'] = some(a)
+					dic['Деталі'] = recieve_value(a)
 
 					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_4],'s'),
 					]
                     #!!!
-					dic["Суб'єкти обтяження"] = some(a)
+					dic["Суб'єкти обтяження"] = recieve_value(a)
 
 					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'), 
 					]
@@ -520,7 +535,7 @@ if __name__ == "__main__":
 						a.append((check[REGISTRY3][0][REGISTRY3_2][0][REGISTRY3_2_7],''))
 					if check[REGISTRY4]:
 						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_6],''))
-					dic['Заявник'] = some(a)
+					dic['Заявник'] = recieve_value(a)
 
 					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'), 
 					]
@@ -528,11 +543,11 @@ if __name__ == "__main__":
 						a.append((check[REGISTRY3][0][REGISTRY3_2][0][REGISTRY3_2_6],''))
 					if check[REGISTRY4]:
 						a.append((check[REGISTRY4][0][REGISTRY4_1][0][REGISTRY4_1_7],''))
-					dic['Власник'] = some(a)
+					dic['Власник'] = recieve_value(a)
 
 					a = [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'), 
 					]
-					dic['Поручитель'] = some(a)
+					dic['Поручитель'] = recieve_value(a)
 
 					check1[1].append(dic)
 			with open('first_part.json','w') as fp:
