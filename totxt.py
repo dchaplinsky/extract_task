@@ -3,6 +3,7 @@
 import sys
 import os
 import re
+import json
 
 usage = """\
 usage: parser.py source_file output_file
@@ -286,7 +287,6 @@ GROUP_REG3_2 = (
 	(REGISTRY3_2_8,r'Додаткові дані:(.*?)\n(ВІДМІТКА|$)'),
 )
 
-
 GROUP_REG4 = (
 	(REGISTRY4_1,
 	 r'(Реєстраційний номер.*?)(?:\nВІДМІТКА|$)'),
@@ -342,11 +342,9 @@ def reg(data,GROUP_PARAMS):
 			dic[param1] = p if p else []
 	return dic
 
-
 def reg2(data,GROUP_PARAMS):
 	p = re.findall(GROUP_PARAMS[0][1],data,re.U|re.S)
 	return p
-
 
 def some(lst):
 	result = ""
@@ -359,7 +357,7 @@ def some(lst):
 			elif elem[1] == 'r':
 				result += elem[0].replace(
 										"Загальна площа (кв.м)", "Заг.пл.").\
-										replace("Житлова площа (кв.м)",
+										replace("житлова площа (кв.м)",
 										"Житл.пл.") + "; "
 			elif elem[1] == 't':
 				result += elem[0][:10] + "; "
@@ -430,7 +428,7 @@ if __name__ == "__main__":
 						if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 						else check[FETCH_PARAMS][OBJECT_ADDRESS]
 				)
-				#a list of tuples containing fields of record and rule to process that string
+				#a list of tuples containing fields of record and rule to process those strings
 				a = [(check[REGISTRY1][i][REGISTRY1_1][0][REGISTRY1_1_2],'s'),
 					 (check[REGISTRY1][i][REGISTRY1_1][0][REGISTRY1_1_3],'r'),
 					 (check[REGISTRY1][i][REGISTRY1_1][0][REGISTRY1_1_5],''),
@@ -537,5 +535,8 @@ if __name__ == "__main__":
 					dic['Поручитель'] = some(a)
 
 					check1[1].append(dic)
-			print check1
+			with open('first_part.json','w') as fp:
+				json.dump(check, fp, indent=4, ensure_ascii=False)
+			with open('second_part.json','w') as fp:
+				json.dump(check1, fp, indent=4, ensure_ascii=False)
 			#end
