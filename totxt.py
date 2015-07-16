@@ -4,13 +4,15 @@ import sys
 import os
 import re
 import json
+import glob2
+import tempfile
 import xlsxwriter
 
 usage = """\
 usage: parser.py source_file output_file
 
     source_filename - path to pdf file to extract information
-    output_file - path to txt file to store an output information
+    output_file - path to xlsx file to store an output information
 """
 
 FETCH_PARAMS = "Параметри запиту"
@@ -596,83 +598,90 @@ def second_part(check):
 			check1[1].append(dic)
 	return check1
 
-def main(text):
+def convert_one(fname):
+	output_file = tempfile.mktemp(prefix="yes_i_know_you_deprecated")
+
+
+	"""
+	pdftotext - is installed poppler-utils package for PDF to text conversion;
+
+	keys:
+		-raw   Keep the text in content stream order;
+		-nopgbrk  Don’t insert page breaks between  pages.
+	""" 
+	os.system('pdftotext -raw -nopgbrk {0} {1}'.format(
+		fname, output_file))
+
+	with open(output_file, 'rb') as f:
+		# converted text from pdf file
+		text = f.read()
+
+	os.unlink(output_file)
+
+	# deletes junk
+	text = re.sub(r'стор. \d{1,3} з \d{1,3}|RRP-.*?\n|  ', '' ,text) 
+
 	check = first_part(text)
 	check1 = second_part(check)
 
-	workbook = xlsxwriter.Workbook('result.xlsx')
+	return check, check1
+
+
+def convert_many(mask, out_file):
+	to_export = map(lambda x: convert_one(x)[1], glob2.glob(mask))
+
+	workbook = xlsxwriter.Workbook(out_file)
 	worksheet = workbook.add_worksheet()
 	bold = workbook.add_format({'bold': True})
-	row = 0
-	col = 0
-	worksheet.write('A1','Параметри запиту'.decode('utf-8'),bold)
-	worksheet.write('B1','Дата регистрации'.decode('utf-8'),bold)
-	worksheet.write('C1','Власник'.decode('utf-8'),bold)
-	worksheet.write('D1','Характеристики нерухомості'.decode('utf-8'),bold)
-	worksheet.write('E1','Підстава власності'.decode('utf-8'),bold)
-	worksheet.write('F1','Форма власності'.decode('utf-8'),bold)
-	worksheet.write('G1','Частка'.decode('utf-8'),bold)
-	worksheet.write('H1','Дата обтяження'.decode('utf-8'),bold)
-	worksheet.write('I1','Причина обтяження'.decode('utf-8'),bold)
-	worksheet.write('J1','Деталі'.decode('utf-8'),bold)
-	worksheet.write('K1',"Суб'єкти обтяження".decode('utf-8'),bold)
-	worksheet.write('L1','Заявник'.decode('utf-8'),bold)
-	worksheet.write('M1','Власник'.decode('utf-8'),bold)
-	worksheet.write('N1','Поручитель'.decode('utf-8'),bold)
+
+	worksheet.write_row(0, 0, [
+		u'Параметри запиту',
+		u'Дата регистрации',
+		u'Власник',
+		u'Характеристики нерухомості',
+		u'Підстава власності',
+		u'Форма власності',
+		u'Частка',
+		u'Дата обтяження',
+		u'Причина обтяження',
+		u'Деталі',
+		u'Заявник',
+		u'Власник',
+		u'Поручитель',], bold
+	)
+
 	row = 1
-	tmp_col = 7
-	for item in check1[0]:
-		names = ['Параметри запиту','Дата регистрации','Власник',
-			 'Характеристики нерухомості','Підстава власності',
-			 'Форма власності','Частка',
-		]
-		for name in names:
-			worksheet.write(row,col,item[name].decode('utf-8'))
-			col += 1
-		tmp_col = col
-		col = 0
+
+	for check1 in to_export:
+		for item in check1[0]:
+			names = ['Параметри запиту','Дата регистрации','Власник',
+				 'Характеристики нерухомості','Підстава власності',
+				 'Форма власності','Частка',
+			]
+
+			worksheet.write_row(
+				row, 0,
+				map(lambda x: item[x].decode('utf-8'), names))
+			row += 1
+	
+		for item in check1[1]:
+			names = ['Дата регистрации','Причина обтяження','Деталі',
+				 "Суб'єкти обтяження",'Заявник',
+				 'Власник','Поручитель',
+			]
+			worksheet.write_row(
+				row, 7,
+				map(lambda x: item[x].decode('utf-8'), names))
+			row += 1
+
 		row += 1
-	col = tmp_col
-	for item in check1[1]:
-		names = ['Дата регистрации','Причина обтяження','Деталі',
-			 "Суб'єкти обтяження",'Заявник',
-			 'Власник','Поручитель',
-		]
-		for name in names:
-			worksheet.write(row,col,item[name].decode('utf-8'))
-			col += 1
-		col = tmp_col
-		row += 1
+
 	workbook.close()
 
-	with open('first_part.json','w') as fp:
-		json.dump(check, fp, indent=4, ensure_ascii=False)
-	with open('second_part.json','w') as fp:
-		json.dump(check1, fp, indent=4, ensure_ascii=False)
-
-	return check,check1
 
 if __name__ == "__main__":
-	source_file = ''
-	output_file = ''
-	
-	if  len(sys.argv) < 3 : sys.exit(usage)
-	elif len(sys.argv) > 2: 
-		source_file = sys.argv[1]
-		output_file = sys.argv[2]
-		"""
-		pdftotext - is installed poppler-utils package for PDF to text conversion;
+	if len(sys.argv) < 3:
+		sys.exit(usage)
 
-		keys:
-			-raw   Keep the text in content stream order;
-			-nopgbrk  Don’t insert page breaks between  pages.
-		""" 
-		os.system(('pdftotext -raw -nopgbrk {0} {1}').format( 
-					source_file, output_file))
-		with open(output_file,'rb') as f:
-			#converted text from pdf file
-			text = f.read()		
-			#deletes junk
-			text = re.sub(r'стор. \d{1,3} з \d{1,3}|RRP-.*?\n|  ','',text) 
-			main(text)
-			#end
+	if len(sys.argv) > 2: 
+		convert_many(sys.argv[1], sys.argv[2])
