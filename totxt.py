@@ -14,6 +14,7 @@ usage: parser.py source_file output_file
     source_filename - path to pdf file to extract information
     output_file - path to xlsx file to store an output information
 """
+DIV = "; "
 
 FETCH_PARAMS = "Параметри запиту"
 
@@ -181,7 +182,7 @@ GROUP_ALL = (
 
 GROUP_OBJECT = (
 	(OBJECT_ADDRESS,
-	 r'Адреса /\nМісцезнаходження:\n(.*?)$'),#done
+	 r'Адреса /\nМісцезнаходження:\n(.*?)$'),
 	(OBJECT_KOD,
 	 r'Кадастровий номер\nземельної ділянки:\n(\d{10}:\d{2}:\d{3}:\d{4})'),
 )
@@ -386,7 +387,7 @@ def recieve_value(lst):
 		if elem[0] != 'None' and elem[0] != '':
 			elem[0] = elem[0].replace('\n',' ')
 			if elem[1] == 's':
-				result += elem[0].split(',')[0] + DIV #done
+				result += elem[0].split(',')[0] + DIV 
 			elif elem[1] == 'r':
 				p = re.compile(r'((?:З|з)агальна площа \(кв\.м\))')
 				result += p.sub('Заг.пл.',elem[0])
@@ -473,7 +474,7 @@ def second_part(check):
 		for y in xrange(len(check[REGISTRY1][i][REGISTRY1_2])):
 			dic = {}
 			dic['Параметри запиту'] = (
-					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ')  #done
+					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ')  
 					if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 					else check[FETCH_PARAMS][OBJECT_KOD]
 			)
@@ -497,7 +498,7 @@ def second_part(check):
 		for i in xrange(len(check[REGISTRY2][0][REGISTRY2_2])):
 			dic = {}
 			dic['Параметри запиту'] = (
-				check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+				check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ')  
 				if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 				else check[FETCH_PARAMS][OBJECT_KOD]
 			)
@@ -519,7 +520,7 @@ def second_part(check):
 		for y in xrange(len(check[REGISTRY1][i][REGISTRY1_3])):
 			dic = {}
 			dic['Параметри запиту'] = (
-				check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+				check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ')  
 				if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 				else check[FETCH_PARAMS][OBJECT_KOD]
 			)
@@ -540,7 +541,7 @@ def second_part(check):
 		for y in xrange(len(check[REGISTRY1][i][REGISTRY1_4])): 
 			dic = {}
 			dic['Параметри запиту'] = (
-				check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+				check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ')  
 				if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 				else check[FETCH_PARAMS][OBJECT_KOD]
 			)
@@ -562,7 +563,7 @@ def second_part(check):
 			for y in xrange(len(check[REGISTRY3][i][REGISTRY3_2])):
 				dic = {}
 				dic['Параметри запиту'] = (
-					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ')  
 					if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 					else check[FETCH_PARAMS][OBJECT_KOD]
 				)
@@ -584,7 +585,7 @@ def second_part(check):
 			for y in xrange(len(check[REGISTRY3][i][REGISTRY3_1])):
 				dic = {}
 				dic['Параметри запиту'] = (
-					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ')  
 					if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 					else check[FETCH_PARAMS][OBJECT_KOD]
 				)
@@ -607,7 +608,7 @@ def second_part(check):
 			for y in xrange(len(check[REGISTRY4][i][REGISTRY4_1])):
 				dic = {}
 				dic['Параметри запиту'] = (
-					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ')  
 					if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 					else check[FETCH_PARAMS][OBJECT_KOD]
 				)
@@ -633,7 +634,7 @@ def second_part(check):
 			for y in xrange(len(check[REGISTRY4][i][REGISTRY4_2])):
 				dic = {}
 				dic['Параметри запиту'] = (
-					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ')  
 					if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 					else check[FETCH_PARAMS][OBJECT_KOD]
 				)
