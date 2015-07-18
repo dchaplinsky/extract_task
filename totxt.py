@@ -181,7 +181,7 @@ GROUP_ALL = (
 
 GROUP_OBJECT = (
 	(OBJECT_ADDRESS,
-	 r'Адреса /\nМісцезнаходження:\n(.*?)\n'),
+	 r'Адреса /\nМісцезнаходження:\n(.*?)$'),#done
 	(OBJECT_KOD,
 	 r'Кадастровий номер\nземельної ділянки:\n(\d{10}:\d{2}:\d{3}:\d{4})'),
 )
@@ -297,7 +297,7 @@ GROUP_REG3_2 = (
 	 r'Реєстраційний номер\nобтяження:\n(.*?)\nЗареєстровано'),
 	(REGISTRY3_2_3,r'Зареєстровано:(?:.|..)(.*?)\nПідстава обтяження'),
 	(REGISTRY3_2_4,r'Підстава обтяження:(.*?)\nОб’єкт обтяження'),
-	(REGISTRY3_2_5,r'Об’єкт обтяження: (.*?)\nВласник'),
+	(REGISTRY3_2_5,r'Об’єкт обтяження: (.*?)\n(?:Власник)'),
 	(REGISTRY3_2_6,r'Власник: (.*?)\nЗаявник'),
 	(REGISTRY3_2_7,r'Заявник: (.*?)(ВІДОМОСТІ|$)'),
 	(REGISTRY3_2_8,r'Додаткові дані:(.*?)\n(ВІДМІТКА|$)'),
@@ -319,7 +319,7 @@ GROUP_REG4_1 = (
 	(REGISTRY4_1_4,
 	 r'Підстава обтяження: (.*?)\nОб’єкт'),
 	(REGISTRY4_1_5,
-	 r'Об’єкт обтяження: (.*?)\nЧастково'),
+	 r'Об’єкт обтяження: (.*?)\n(?:Іпотекодержатель)'),
 	(REGISTRY4_1_6,r'Іпотекодержатель: (.*?)\nІпотекодавець'),
 	(REGISTRY4_1_7,
 	 r'Іпотекодавець: (.*?)\nРозмір'),
@@ -327,7 +327,7 @@ GROUP_REG4_1 = (
 	 r'Розмір основного\nзобов’язання:\n(.*?)\nСтрок'),
 	(REGISTRY4_1_9,r'Строк виконання: (.*?)\n'),
 	(REGISTRY4_1_10,
-	 r'Заставна: (.*?)\nДодаткові'),
+	 r'Заставна: (.*?)(?:Додаткові|$)'),
 	(REGISTRY4_1_11,
 	 r'Додаткові дані: (.*?)$'),
 )
@@ -337,7 +337,7 @@ GROUP_REG4_2 = (
 	 r'Номер запису про\nіпотеку:(.*?)\nДата перенесення'),
 	(REGISTRY4_2_2,
 	 r'Дата перенесення:(?:.|..)(.*?)(?:\n|$)'),
-	(REGISTRY4_2_3,r'Дата перенесення:.*?\n(.*?)$'),
+	(REGISTRY4_2_3,r'Дата перенесення:.*?\n(.*?)(?:ВІДОМОСТІ ПРО ІПОТЕКУ|$)'),
 )
 
 
@@ -386,22 +386,40 @@ def recieve_value(lst):
 		if elem[0] != 'None' and elem[0] != '':
 			elem[0] = elem[0].replace('\n',' ')
 			if elem[1] == 's':
-				result += elem[0].split(',')[0] + "; "
+				result += elem[0].split(',')[0] + DIV #done
 			elif elem[1] == 'r':
-				result += elem[0].replace(
-										"Загальна площа (кв.м)", "Заг.пл.").\
-										replace("житлова площа (кв.м)",
-										"Житл.пл.").replace(
-										"Житлова площа (кв.м)","Житл.пл.") + "; "
+				p = re.compile(r'((?:З|з)агальна площа \(кв\.м\))')
+				result += p.sub('Заг.пл.',elem[0])
+				p = re.compile(r'((?:Ж|ж)итлова площа \(кв\.м\))')
+				result = p.sub('Житл.пл.',result)
+				p = re.compile(r'((?:З|з)агальна вартість нерухомого майна(?:.*)\(грн\))')
+				result = p.sub('Вартість (грн)',result)
+				p = re.compile(r'((?:Т|т)ехнічний опис майна: Кількість кімнат - )')
+				result = p.sub('Кімнат: ',result)
+				result += DIV
 			elif elem[1] == 't':
-				result += elem[0][:10] + "; "
+				result += elem[0][:10] + DIV
 			elif elem[1] == 'k':
-				p = re.search(r'Іпотекодавець:(.*?) (?:Іпотекодержатель|Майновий поручитель)',
+				p = re.search(r'Іпотекодавець:(.*?)(?:.|^.)(?:Іпотекодержатель|Майновий поручитель)',
 								elem[0],re.U|re.S)
 				if p:
-					result += p.group(1) + "; "
+					result += p.group(1) + DIV
+			elif elem[1] == 'd':
+				p = re.search(r'(.*?)(?:, адреса:)',
+								elem[0],re.U|re.S)
+				if p:
+					result += p.group(1)
+				p = re.compile(r'((?:З|з)агальною площею)')
+				result = p.sub('Заг.пл.:',result)
+				p = re.compile(r'((?:Ж|ж)итловою площею)')
+				result = p.sub('Житл.пл.:',result)
+				result += DIV
+			elif elem[1] == 'a':
+				result += REGISTRY4_1_8 + ": " + elem[0] + DIV
+			elif elem[1] == 'z':
+				result += REGISTRY4_1_10 + ": " + elem[0] + DIV
 			else:
-				result += elem[0] + "; "
+				result += elem[0] + DIV
 	return result.strip(' ')
 
 def first_part(text):
@@ -455,7 +473,7 @@ def second_part(check):
 		for y in xrange(len(check[REGISTRY1][i][REGISTRY1_2])):
 			dic = {}
 			dic['Параметри запиту'] = (
-					check[FETCH_PARAMS][OBJECT_ADDRESS] 
+					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ')  #done
 					if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 					else check[FETCH_PARAMS][OBJECT_KOD]
 			)
@@ -479,13 +497,13 @@ def second_part(check):
 		for i in xrange(len(check[REGISTRY2][0][REGISTRY2_2])):
 			dic = {}
 			dic['Параметри запиту'] = (
-				check[FETCH_PARAMS][OBJECT_ADDRESS] 
+				check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
 				if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
 				else check[FETCH_PARAMS][OBJECT_KOD]
 			)
 			fields = {
 					'Характеристики нерухомості': [(check[REGISTRY2][0][REGISTRY2_1][0][REGISTRY2_1_2],''),
-				 								   (check[REGISTRY2][0][REGISTRY2_1][0][REGISTRY2_1_4],''),],
+				 								   (check[REGISTRY2][0][REGISTRY2_1][0][REGISTRY2_1_4],'r'),],
 					'Дата регистрации': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_1],''),],
 					'Підстава власності': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_6],'s'),],
 					'Форма власності': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_4],''),],
@@ -500,6 +518,11 @@ def second_part(check):
 	for i in xrange(len(check[REGISTRY1])):
 		for y in xrange(len(check[REGISTRY1][i][REGISTRY1_3])):
 			dic = {}
+			dic['Параметри запиту'] = (
+				check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+				if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
+				else check[FETCH_PARAMS][OBJECT_KOD]
+			)
 			fields = {
 					'Дата регистрации': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_2],'t'),],
 					'Причина обтяження': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_4],'s'),],
@@ -511,11 +534,16 @@ def second_part(check):
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
-
+			#print check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7]
 			check1[1].append(dic)
 
 		for y in xrange(len(check[REGISTRY1][i][REGISTRY1_4])): 
 			dic = {}
+			dic['Параметри запиту'] = (
+				check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+				if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
+				else check[FETCH_PARAMS][OBJECT_KOD]
+			)
 			fields = {
 					'Дата регистрации': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_2],'t'),],
 					'Причина обтяження': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_4],'s'),],
@@ -530,72 +558,98 @@ def second_part(check):
 
 			check1[1].append(dic)
 	if check[REGISTRY3]:
-		for i in xrange(len(check[REGISTRY3][0][REGISTRY3_2])):
-			dic = {}
-			fields = {
-					'Дата регистрации': [(check[REGISTRY3][0][REGISTRY3_2][i][REGISTRY3_2_3],'t'),],
-					'Причина обтяження': [(check[REGISTRY3][i][REGISTRY3_2][i][REGISTRY3_2_4],'s'),],
-					'Деталі': [(check[REGISTRY3][i][REGISTRY3_2][i][REGISTRY3_2_1],''),],
-					"Суб'єкти обтяження": [('',''),],
-					'Заявник': [(check[REGISTRY3][i][REGISTRY3_2][i][REGISTRY3_2_7],''),],
-					'Власник': [(check[REGISTRY3][i][REGISTRY3_2][i][REGISTRY3_2_6],''),],
-					'Поручитель': [('',''),],
-			}
-			for key in fields:
-				dic[key] = recieve_value(fields[key])
+		for i in xrange(len(check[REGISTRY3])):
+			for y in xrange(len(check[REGISTRY3][i][REGISTRY3_2])):
+				dic = {}
+				dic['Параметри запиту'] = (
+					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+					if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
+					else check[FETCH_PARAMS][OBJECT_KOD]
+				)
+				fields = {
+						'Дата регистрации': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_3],'t'),],
+						'Причина обтяження': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_4],'s'),],
+						'Деталі': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_5],'d'),
+								   (check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_1],''),],
+						"Суб'єкти обтяження": [('',''),],
+						'Заявник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_7],''),],
+						'Власник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_6],''),],
+						'Поручитель': [('',''),],
+				}
+				for key in fields:
+					dic[key] = recieve_value(fields[key])
 
-			check1[1].append(dic)
-		for i in xrange(len(check[REGISTRY3][0][REGISTRY3_1])):
-			dic = {}
-			fields = {
-					'Дата регистрации': [(check[REGISTRY3][0][REGISTRY3_1][i][REGISTRY3_1_2],'t'),],
-					'Причина обтяження': [('',''),],
-					'Деталі': [(check[REGISTRY3][i][REGISTRY3_1][i][REGISTRY3_1_3],''),],
-					"Суб'єкти обтяження": [('',''),],
-					'Заявник': [('',''),],
-					'Власник': [('',''),],
-					'Поручитель': [('',''),],
-			}
-			for key in fields:
-				dic[key] = recieve_value(fields[key])
+				check1[1].append(dic)
+		for i in xrange(len(check[REGISTRY3])):
+			for y in xrange(len(check[REGISTRY3][i][REGISTRY3_1])):
+				dic = {}
+				dic['Параметри запиту'] = (
+					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+					if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
+					else check[FETCH_PARAMS][OBJECT_KOD]
+				)
+				fields = {
+						'Дата регистрации': [(check[REGISTRY3][i][REGISTRY3_1][y][REGISTRY3_1_2],'t'),],
+						'Причина обтяження': [('',''),],
+						'Деталі': [(check[REGISTRY3][i][REGISTRY3_1][y][REGISTRY3_1_3],''),],
+						"Суб'єкти обтяження": [('',''),],
+						'Заявник': [('',''),],
+						'Власник': [('',''),],
+						'Поручитель': [('',''),],
+				}
+				for key in fields:
+					dic[key] = recieve_value(fields[key])
 
-			check1[1].append(dic)
+				check1[1].append(dic)
 
 	if check[REGISTRY4]:
-		for i in xrange(len(check[REGISTRY4][0][REGISTRY4_1])):
-			dic = {}
-			fields = {
-					'Дата регистрации': [(check[REGISTRY4][0][REGISTRY4_1][i][REGISTRY4_1_3],'t'),],
-					'Причина обтяження': [(check[REGISTRY4][i][REGISTRY4_1][i][REGISTRY4_1_4],'s'),],
-					'Деталі': [(check[REGISTRY4][i][REGISTRY4_1][i][REGISTRY4_1_2],''),
-							   (check[REGISTRY4][i][REGISTRY4_1][i][REGISTRY4_1_8],''),
-							   (check[REGISTRY4][i][REGISTRY4_1][i][REGISTRY4_1_10],''),
-							   (check[REGISTRY4][i][REGISTRY4_1][i][REGISTRY4_1_9],''),
-							   (check[REGISTRY4][i][REGISTRY4_1][i][REGISTRY4_1_11],''),],
-					"Суб'єкти обтяження": [('',''),],
-					'Заявник': [(check[REGISTRY4][i][REGISTRY4_1][i][REGISTRY4_1_6],''),],
-					'Власник': [(check[REGISTRY4][i][REGISTRY4_1][i][REGISTRY4_1_7],''),],
-					'Поручитель': [('',''),],
-			}
-			for key in fields:
-				dic[key] = recieve_value(fields[key])
+		for i in xrange(len(check[REGISTRY4])):
+			for y in xrange(len(check[REGISTRY4][i][REGISTRY4_1])):
+				dic = {}
+				dic['Параметри запиту'] = (
+					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+					if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
+					else check[FETCH_PARAMS][OBJECT_KOD]
+				)
+				fields = {
+						'Дата регистрации': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_3],'t'),],
+						'Причина обтяження': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_4],'s'),],
+						'Деталі': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_5],'d'),
+								   (check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_2],''),
+								   (check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_8],'a'),
+								   (check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_10],'z'),
+								   (check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_9],''),
+								   (check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_11],''),],		   
+						"Суб'єкти обтяження": [('',''),],
+						'Заявник': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_6],''),],
+						'Власник': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_7],''),],
+						'Поручитель': [('',''),],
+				}
+				for key in fields:
+					dic[key] = recieve_value(fields[key])
 
-			check1[1].append(dic)
-		for i in xrange(len(check[REGISTRY4][0][REGISTRY4_2])):
-			dic = {}
-			fields = {
-					'Дата регистрации': [(check[REGISTRY4][0][REGISTRY4_2][i][REGISTRY4_2_2],'t'),],
-					'Причина обтяження': [('',''),],
-					'Деталі': [(check[REGISTRY4][i][REGISTRY4_2][i][REGISTRY4_2_3],''),],
-					"Суб'єкти обтяження": [('',''),],
-					'Заявник': [('',''),],
-					'Власник': [('',''),],
-					'Поручитель': [('',''),],
-			}
-			for key in fields:
-				dic[key] = recieve_value(fields[key])
+				check1[1].append(dic)
+		for i in xrange(len(check[REGISTRY4])):
+			for y in xrange(len(check[REGISTRY4][i][REGISTRY4_2])):
+				dic = {}
+				dic['Параметри запиту'] = (
+					check[FETCH_PARAMS][OBJECT_ADDRESS].replace('\n',' ') #done 
+					if check[FETCH_PARAMS][OBJECT_ADDRESS] != 'None'
+					else check[FETCH_PARAMS][OBJECT_KOD]
+				)
+				fields = {
+						'Дата регистрации': [(check[REGISTRY4][i][REGISTRY4_2][y][REGISTRY4_2_2],'t'),],
+						'Причина обтяження': [('',''),],
+						'Деталі': [(check[REGISTRY4][i][REGISTRY4_2][y][REGISTRY4_2_3],''),],
+						"Суб'єкти обтяження": [('',''),],
+						'Заявник': [('',''),],
+						'Власник': [('',''),],
+						'Поручитель': [('',''),],
+				}
+				for key in fields:
+					dic[key] = recieve_value(fields[key])
 
-			check1[1].append(dic)
+				check1[1].append(dic)
 	return check1
 
 def convert_one(fname):
@@ -642,6 +696,7 @@ def convert_many(mask, out_file):
 		u'Підстава власності',
 		u'Форма власності',
 		u'Частка',
+		u'Параметри запиту',
 		u'Дата обтяження',
 		u'Причина обтяження',
 		u'Деталі',
@@ -665,7 +720,7 @@ def convert_many(mask, out_file):
 			row += 1
 	
 		for item in check1[1]:
-			names = ['Дата регистрации','Причина обтяження','Деталі',
+			names = ['Параметри запиту','Дата регистрации','Причина обтяження','Деталі',
 				 "Суб'єкти обтяження",'Заявник',
 				 'Власник','Поручитель',
 			]
