@@ -423,7 +423,8 @@ def recieve_value(lst):
 				result += elem[0]
 			else:
 				result += elem[0] + DIV
-	return result.strip(' ')
+
+	return result.strip().strip(DIV)
 
 def first_part(text):
 	#first level separation
