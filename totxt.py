@@ -419,6 +419,8 @@ def recieve_value(lst):
 				result += REGISTRY4_1_8 + ": " + elem[0] + DIV
 			elif elem[1] == 'z':
 				result += REGISTRY4_1_10 + ": " + elem[0] + DIV
+			elif elem[1] == 'n':
+				result += elem[0]
 			else:
 				result += elem[0] + DIV
 	return result.strip(' ')
@@ -488,7 +490,7 @@ def second_part(check):
 					'Підстава власності': [(check[REGISTRY1][i][REGISTRY1_2][y][REGISTRY1_2_4],'s'),],
 					'Форма власності': [(check[REGISTRY1][i][REGISTRY1_2][y][REGISTRY1_2_6],''),],
 					'Частка': [(check[REGISTRY1][i][REGISTRY1_2][y][REGISTRY1_2_7],''),],
-					'Власник': [(check[REGISTRY1][i][REGISTRY1_2][y][REGISTRY1_2_8],''),],
+					'Власник': [(check[REGISTRY1][i][REGISTRY1_2][y][REGISTRY1_2_8],'n'),],
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
@@ -509,7 +511,7 @@ def second_part(check):
 					'Підстава власності': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_6],'s'),],
 					'Форма власності': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_4],''),],
 					'Частка': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_5],''),],
-					'Власник': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_3],''),],
+					'Власник': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_3],'n'),],
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
@@ -574,7 +576,7 @@ def second_part(check):
 								   (check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_1],''),],
 						"Суб'єкти обтяження": [('',''),],
 						'Заявник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_7],''),],
-						'Власник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_6],''),],
+						'Власник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_6],'n'),],
 						'Поручитель': [('',''),],
 				}
 				for key in fields:
@@ -623,7 +625,7 @@ def second_part(check):
 								   (check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_11],''),],		   
 						"Суб'єкти обтяження": [('',''),],
 						'Заявник': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_6],''),],
-						'Власник': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_7],''),],
+						'Власник': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_7],'n'),],
 						'Поручитель': [('',''),],
 				}
 				for key in fields:
@@ -697,10 +699,10 @@ def convert_many(mask, out_file):
 		u'Підстава власності',
 		u'Форма власності',
 		u'Частка',
-		u'Параметри запиту',
 		u'Дата обтяження',
 		u'Причина обтяження',
 		u'Деталі',
+		u"Суб'єкти обтяження",
 		u'Заявник',
 		u'Власник',
 		u'Поручитель',], bold
@@ -710,18 +712,19 @@ def convert_many(mask, out_file):
 
 	for check1 in to_export:
 		for item in check1[0]:
-			names = ['Параметри запиту','Дата регистрации','Власник',
+			worksheet.write(row,0,item['Параметри запиту'].decode('utf-8'))
+			names = ['Дата регистрации','Власник',
 				 'Характеристики нерухомості','Підстава власності',
 				 'Форма власності','Частка',
 			]
-
 			worksheet.write_row(
-				row, 0,
+				row, 1,
 				map(lambda x: item[x].decode('utf-8'), names))
 			row += 1
 	
 		for item in check1[1]:
-			names = ['Параметри запиту','Дата регистрации','Причина обтяження','Деталі',
+			worksheet.write(row,0,item['Параметри запиту'].decode('utf-8'))
+			names = ['Дата регистрации','Причина обтяження','Деталі',
 				 "Суб'єкти обтяження",'Заявник',
 				 'Власник','Поручитель',
 			]
