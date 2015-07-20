@@ -68,6 +68,7 @@ REGISTRY1_4_5 = "Підстава внесення запису"
 REGISTRY1_4_6 = "Вид обтяження"
 REGISTRY1_4_7 = "Відомості про суб’єктів обтяження"
 REGISTRY1_4_8 = "Відомості про реєстрацію до 01.01.2013р."
+REGISTRY1_4_9 = "Додаткові відомості про обтяження"
 
 
 REGISTRY2 = "ВІДОМОСТІ З РЕЄСТРУ ПРАВ ВЛАСНОСТІ НА НЕРУХОМЕ МАЙНО"
@@ -233,7 +234,7 @@ GROUP_REG1_3 = (
 	(REGISTRY1_3_5,r'Підстава внесення\nзапису:\n(.*?)\nВідомості'),
 	(REGISTRY1_3_6,r'Відомості про основне\nзобов’язання:\n(.*?)\nВідомості'),
 	(REGISTRY1_3_7,r'Відомості про суб’єктів:(.*?)\n(Боржник:|Додаткові.*?:|Відомості.*?(?:.|)|Адреса.*?:|Опис.*?)'),
-	(REGISTRY1_3_8,r'Додаткові відомості про\nіпотеку:\n(.*?)\n(Актуальна|Додаткові|Відомості|$)'),
+	(REGISTRY1_3_8,r'Опис предмета іпотеки:(.*?)(?:Актуальна|Додаткові|Відомості|$)'),
 )
 GROUP_REG1_4 = (
 	(REGISTRY1_4_1,r'Номер запису про(?:\n| )обтяження: (.*?)\n'),
@@ -244,6 +245,7 @@ GROUP_REG1_4 = (
 	(REGISTRY1_4_6,r'Вид обтяження: (.*?)\n(Відомості|$)'),
 	(REGISTRY1_4_7,r'Відомості про суб’єктів\nобтяження:(.*?)($|ВІДОМОСТІ|Відомості|Вид|Опис)'),
 	(REGISTRY1_4_8,r'Відомості про реєстрацію\nдо 01.01.2013р.:\n(.*?)(Відомості|Актуальна|Зміст|$)'),
+	(REGISTRY1_4_9,r'Опис предмета\nобтяження:(.*?)(?:Актуальна|Додаткові|Відомості|ВІДОМОСТІ|$)'),
 )
 
 GROUP_REG2 = (
@@ -389,22 +391,27 @@ def recieve_value(lst):
 			if elem[1] == 's':
 				result += elem[0].split(',')[0] + DIV 
 			elif elem[1] == 'r':
-				p = re.compile(r'((?:З|з)агальна площа \(кв\.м\))')
+				p = re.compile(r'((?:З|з)агальна площа \(кв\.м\))|(((?:З|з)агальна площа))')
 				result += p.sub('Заг.пл.',elem[0])
-				p = re.compile(r'((?:Ж|ж)итлова площа \(кв\.м\))')
+				p = re.compile(r'((?:Ж|ж)итлова площа \(кв\.м\))|(((?:Ж|ж)итлова(?:.*?)площа))')
 				result = p.sub('Житл.пл.',result)
 				p = re.compile(r'((?:З|з)агальна вартість нерухомого майна(?:.*)\(грн\))')
 				result = p.sub('Вартість (грн)',result)
-				p = re.compile(r'((?:Т|т)ехнічний опис майна: Кількість кімнат - )')
+				p = re.compile(r'((?:Т|т)ехнічний опис майна: Кількість кімнат - )|((?:К|к)ількість кімнат -)')
 				result = p.sub('Кімнат: ',result)
 				result += DIV
 			elif elem[1] == 't':
 				result += elem[0][:10] + DIV
 			elif elem[1] == 'k':
-				p = re.search(r'Іпотекодавець:(.*?)(?:.|^.)(?:Іпотекодержатель|Майновий поручитель)',
+				p = re.search(r'Іпотекодавець:(.*?)(?:|^.)(?:Іпотекодержатель|Майновий поручитель|$)',
 								elem[0],re.U|re.S)
 				if p:
-					result += p.group(1) + DIV
+					p1 = re.search(r'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					if p1:
+						result += "TOB. " + p1.group(1) + DIV
+					else:
+						result += p.group(1) + DIV
 			elif elem[1] == 'd':
 				p = re.search(r'(.*?)(?:, адреса:)',
 								elem[0],re.U|re.S)
@@ -421,9 +428,28 @@ def recieve_value(lst):
 				result += REGISTRY4_1_10 + ": " + elem[0] + DIV
 			elif elem[1] == 'n':
 				result += elem[0]
+			elif elem[1] == 'q':
+				p = re.search(r'Іпотекодержатель:(.*?)(?:|^.)(?:Іпотекодавець|Майновий поручитель|$)',
+								elem[0],re.U|re.S)
+				if p:
+					p1 = re.search(r'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					if p1:
+						result += "TOB. " + p1.group(1) + DIV
+					else:
+						result += p.group(1) + DIV
+			elif elem[1] == 'e':
+				p = re.search(r'Майновий поручитель:(.*?)(?:|^.)(?:Іпотекодавець|Іпотекодержатель|$)',
+								elem[0],re.U|re.S)
+				if p:
+					p1 = re.search(r'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					if p1:
+						result += "TOB. " + p1.group(1) + DIV
+					else:
+						result += p.group(1) + DIV
 			else:
 				result += elem[0] + DIV
-
 	return result.strip().strip(DIV)
 
 def first_part(text):
@@ -530,15 +556,15 @@ def second_part(check):
 			fields = {
 					'Дата регистрации': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_2],'t'),],
 					'Причина обтяження': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_4],'s'),],
-					'Деталі': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_6],'s'),],
-					"Суб'єкти обтяження": [('',''),],
-					'Заявник': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'),],
+					'Деталі': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_6],''),
+							   (check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_8],'r'),],
+					"Суб'єкти обтяження": [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],''),],
+					'Заявник': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'q'),],
 					'Власник': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'),],
-					'Поручитель': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'),],
+					'Поручитель': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'e'),],
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
-			#print check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7]
 			check1[1].append(dic)
 
 		for y in xrange(len(check[REGISTRY1][i][REGISTRY1_4])): 
@@ -551,7 +577,8 @@ def second_part(check):
 			fields = {
 					'Дата регистрации': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_2],'t'),],
 					'Причина обтяження': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_4],'s'),],
-					'Деталі': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_6],'s'),],
+					'Деталі': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_6],'s'),
+							   (check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_9],'r'),],
 					"Суб'єкти обтяження": [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_7],''),],
 					'Заявник': [('',''),],
 					'Власник': [('',''),],
@@ -559,6 +586,7 @@ def second_part(check):
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
+
 
 			check1[1].append(dic)
 	if check[REGISTRY3]:
