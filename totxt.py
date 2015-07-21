@@ -406,7 +406,7 @@ def recieve_value(lst):
 				p = re.search(r'Іпотекодавець:(.*?)(?:|^.)(?:Іпотекодержатель|Майновий поручитель|$)',
 								elem[0],re.U|re.S)
 				if p:
-					p1 = re.search(r'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ (.*?\d{8})',
+					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
 								p.group(1),re.U|re.I|re.S)
 					if p1:
 						result += "TOB. " + p1.group(1) + DIV
@@ -432,7 +432,7 @@ def recieve_value(lst):
 				p = re.search(r'Іпотекодержатель:(.*?)(?:|^.)(?:Іпотекодавець|Майновий поручитель|$)',
 								elem[0],re.U|re.S)
 				if p:
-					p1 = re.search(r'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ (.*?\d{8})',
+					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
 								p.group(1),re.U|re.I|re.S)
 					if p1:
 						result += "TOB. " + p1.group(1) + DIV
@@ -442,12 +442,20 @@ def recieve_value(lst):
 				p = re.search(r'Майновий поручитель:(.*?)(?:|^.)(?:Іпотекодавець|Іпотекодержатель|$)',
 								elem[0],re.U|re.S)
 				if p:
-					p1 = re.search(r'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ (.*?\d{8})',
+					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
 								p.group(1),re.U|re.I|re.S)
 					if p1:
 						result += "TOB. " + p1.group(1) + DIV
 					else:
 						result += p.group(1) + DIV
+			elif elem[1] == 'h':
+				p = re.match(r'(.*?),(?:| )серія та номер',elem[0],re.U|re.S)
+				if p:
+					result += p.group(1) + DIV
+			elif elem[1] == 'c':
+				p = re.search(r'((Боржник|Обтяжувач|Особа, майно/права якої|Заявник).*?)$',elem[0],re.U|re.S)
+				if p:
+					result += p.group(1) + DIV
 			else:
 				result += elem[0] + DIV
 	return result.strip().strip(DIV)
@@ -556,9 +564,9 @@ def second_part(check):
 			fields = {
 					'Дата регистрации': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_2],'t'),],
 					'Причина обтяження': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_4],'s'),],
-					'Деталі': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_6],''),
+					'Деталі': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_6],'h'),
 							   (check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_8],'r'),],
-					"Суб'єкти обтяження": [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],''),],
+					"Суб'єкти обтяження": [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'c'),],
 					'Заявник': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'q'),],
 					'Власник': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'),],
 					'Поручитель': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'e'),],
@@ -579,7 +587,7 @@ def second_part(check):
 					'Причина обтяження': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_4],'s'),],
 					'Деталі': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_6],'s'),
 							   (check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_9],'r'),],
-					"Суб'єкти обтяження": [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_7],''),],
+					"Суб'єкти обтяження": [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_7],'c'),],
 					'Заявник': [('',''),],
 					'Власник': [('',''),],
 					'Поручитель': [('',''),],
