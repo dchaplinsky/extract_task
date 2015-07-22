@@ -192,7 +192,7 @@ GROUP_REG1 = (
 	(REGISTRY1_1,
 	 r'(Реєстраційний номер\nоб’єкта нерухомого\nмайна:\n.*?(?=Реєстраційний|$|Актуальна|відсутні))'),
 	(REGISTRY1_2,
-	 r'(Номер запису про право(?:\n| )власності:.*?(?=Номер запису про право\nвласності|$|Актуальна|Відомості.*відсутні))'),
+	 r'(Номер запису про право(?:\n| )власності:.*?(?=Номер запису про право(?:\n| )власності|$|Актуальна|Відомості.*відсутні))'),
 	(REGISTRY1_3,
 	 r'(Номер запису про(?:\n| )іпотек(?:у|и):.*?\n(?=Номер запису|$|Актуальна|відсутні))'),
 	(REGISTRY1_4,
@@ -233,7 +233,7 @@ GROUP_REG1_3 = (
 	(REGISTRY1_3_4,r'Підстава виникнення\nіпотеки:(.*?)\nПідстава внесення'),
 	(REGISTRY1_3_5,r'Підстава внесення\nзапису:\n(.*?)\nВідомості'),
 	(REGISTRY1_3_6,r'Відомості про основне\nзобов’язання:\n(.*?)\nВідомості'),
-	(REGISTRY1_3_7,r'Відомості про суб’єктів:(.*?)\n(Боржник:|Додаткові.*?:|Відомості.*?(?:.|)|Адреса.*?:|Опис.*?)'),
+	(REGISTRY1_3_7,r'Відомості про суб’єктів:(.*?)\n(Додаткові.*?:|Відомості.*?(?:.|)|Адреса.*?:|Опис.*?)'),
 	(REGISTRY1_3_8,r'Опис предмета іпотеки:(.*?)(?:Актуальна|Додаткові|Відомості|$)'),
 )
 GROUP_REG1_4 = (
@@ -408,8 +408,16 @@ def recieve_value(lst):
 				if p:
 					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
 								p.group(1),re.U|re.I|re.S)
+					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
 					if p1:
-						result += "TOB. " + p1.group(1) + DIV
+						result += "TOB " + p1.group(1) + DIV
+					elif p2:
+						result += "ПАТ " + p2.group(1) + DIV
+					elif p3:
+						result += "АКБ " + p3.group(1) + DIV
 					else:
 						result += p.group(1) + DIV
 			elif elem[1] == 'd':
@@ -419,23 +427,44 @@ def recieve_value(lst):
 					result += p.group(1)
 				p = re.compile(r'((?:З|з)агальною площею)')
 				result = p.sub('Заг.пл.:',result)
-				p = re.compile(r'((?:Ж|ж)итловою площею)')
+				p = re.compile(r'((?:Ж|ж)итловою площею)|((?:Ж|ж)итловою плоею)')
 				result = p.sub('Житл.пл.:',result)
 				result += DIV
 			elif elem[1] == 'a':
 				result += REGISTRY4_1_8 + ": " + elem[0] + DIV
 			elif elem[1] == 'z':
 				result += REGISTRY4_1_10 + ": " + elem[0] + DIV
-			elif elem[1] == 'n':
-				result += elem[0]
+			elif elem[1] == 'f':
+				p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
+							elem[0],re.U|re.I|re.S)
+				p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
+							elem[0],re.U|re.I|re.S)
+				p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
+							elem[0],re.U|re.I|re.S)
+				if p1:
+					result += "TOB " + p1.group(1) 
+				elif p2:
+					result += "ПАТ " + p2.group(1) 
+				elif p3:
+					result += "АКБ " + p3.group(1) 
+				else:
+					result += elem[0] 
 			elif elem[1] == 'q':
-				p = re.search(r'Іпотекодержатель:(.*?)(?:|^.)(?:Іпотекодавець|Майновий поручитель|$)',
+				p = re.search(r'Іпотекодержатель:(.*?)(?:|^.)(?:Іпотекодавець|Майновий поручитель|Боржник|$)',
 								elem[0],re.U|re.S)
 				if p:
 					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
 								p.group(1),re.U|re.I|re.S)
+					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
 					if p1:
-						result += "TOB. " + p1.group(1) + DIV
+						result += "TOB " + p1.group(1) + DIV
+					elif p2:
+						result += "ПАТ " + p2.group(1) + DIV
+					elif p3:
+						result += "АКБ " + p3.group(1) + DIV
 					else:
 						result += p.group(1) + DIV
 			elif elem[1] == 'e':
@@ -444,18 +473,87 @@ def recieve_value(lst):
 				if p:
 					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
 								p.group(1),re.U|re.I|re.S)
+					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
 					if p1:
-						result += "TOB. " + p1.group(1) + DIV
+						result += "TOB " + p1.group(1) + DIV
+					elif p2:
+						result += "ПАТ " + p2.group(1) + DIV
+					elif p3:
+						result += "АКБ " + p3.group(1) + DIV
 					else:
 						result += p.group(1) + DIV
+				p = re.search(r'(Боржник.*?)(?:Заявник|$)',elem[0],re.U|re.S)
+				if p:
+					p1 = re.compile(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю)')
+					result = p1.sub('ТОВ ',p.group(1))
+					p1 = re.compile(r'(?!\d{8})(, адреса.*?)(?=Боржник|$)')
+					result = p1.sub(' ',result)
+					result += DIV
 			elif elem[1] == 'h':
 				p = re.match(r'(.*?),(?:| )серія та номер',elem[0],re.U|re.S)
 				if p:
 					result += p.group(1) + DIV
+				else:
+					result += elem[0] + DIV
 			elif elem[1] == 'c':
-				p = re.search(r'((Боржник|Обтяжувач|Особа, майно/права якої|Заявник).*?)$',elem[0],re.U|re.S)
+				p = re.search(r'(Боржник.*?)(?:Заявник|$)',elem[0],re.U|re.S)
 				if p:
-					result += p.group(1) + DIV
+					p1 = re.compile(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю)')
+					result = p1.sub('ТОВ ',p.group(1))
+					p1 = re.compile(r'(?!\d{8})(, адреса.*?)(?=Боржник|$)')
+					result = p1.sub(' ',result)
+					result += DIV
+			elif elem[1] == 'y':
+				p = re.search(r'Обтяжувач:(.*?)(?:|^.)(?:Особа, майно/права|$)',
+								elem[0],re.U|re.S)
+				if p:
+					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					if p1:
+						result += "TOB " + p1.group(1) + DIV
+					elif p2:
+						result += "ПАТ " + p2.group(1) + DIV
+					elif p3:
+						result += "АКБ " + p3.group(1) + DIV
+					else:
+						result += p.group(1) + DIV
+			elif elem[1] == 'u':
+				p = re.search(r'Особа, майно/права якої обтяжуються:(.*?)(?:|^.)(?:Обтяжувач|Опис предмета|$)',
+								elem[0],re.U|re.S)
+				if p:
+					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
+								p.group(1),re.U|re.I|re.S)
+					if p1:
+						result += "TOB " + p1.group(1) + DIV
+					elif p2:
+						result += "ПАТ " + p2.group(1) + DIV
+					elif p3:
+						result += "АКБ " + p3.group(1) + DIV
+					else:
+						result += p.group(1) + DIV
+			elif elem[1] == 'v':
+				p = re.compile(r'(?:Іпотекодавець):(.*?)(?=Іпотекодержатель|Майновий поручитель|Боржник|Заявник|$)')
+				tmp= p.sub('',elem[0])
+				p = re.compile(r'(?:Іпотекодержатель):(.*?)(?=Іпотекодавець|Майновий поручитель|Боржник|Заявник|$)')
+				tmp += p.sub('',tmp)
+				p = re.compile(r'(?:Майновий поручитель):(.*?)(?=Іпотекодавець|Іпотекодержатель|Боржник|Заявник|$)')
+				tmp += p.sub('',tmp)
+			elif elem[1] == 'j':
+				p = re.compile(r'(?:Обтяжувач):(.*?)(?=Особа, |Боржник|Заявник|$)')
+				tmp= p.sub('',elem[0])
+				p = re.compile(r'(?:Особа, майно/права якої обтяжуються):(.*?)(?=Особа|Обтяжувач|Боржник|Заявник|$)')
+				result += p.sub('',tmp)
 			else:
 				result += elem[0] + DIV
 	return result.strip().strip(DIV)
@@ -525,11 +623,10 @@ def second_part(check):
 					'Підстава власності': [(check[REGISTRY1][i][REGISTRY1_2][y][REGISTRY1_2_4],'s'),],
 					'Форма власності': [(check[REGISTRY1][i][REGISTRY1_2][y][REGISTRY1_2_6],''),],
 					'Частка': [(check[REGISTRY1][i][REGISTRY1_2][y][REGISTRY1_2_7],''),],
-					'Власник': [(check[REGISTRY1][i][REGISTRY1_2][y][REGISTRY1_2_8],'n'),],
+					'Власник': [(check[REGISTRY1][i][REGISTRY1_2][y][REGISTRY1_2_8],'f'),],
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
-
 			check1[0].append(dic)
 	if check[REGISTRY2]:
 		for i in xrange(len(check[REGISTRY2][0][REGISTRY2_2])):
@@ -546,11 +643,10 @@ def second_part(check):
 					'Підстава власності': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_6],'s'),],
 					'Форма власності': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_4],''),],
 					'Частка': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_5],''),],
-					'Власник': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_3],'n'),],
+					'Власник': [(check[REGISTRY2][0][REGISTRY2_2][i][REGISTRY2_2_3],'f'),],
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
-
 			check1[0].append(dic)
 	#second table
 	for i in xrange(len(check[REGISTRY1])):
@@ -566,7 +662,7 @@ def second_part(check):
 					'Причина обтяження': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_4],'s'),],
 					'Деталі': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_6],'h'),
 							   (check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_8],'r'),],
-					"Суб'єкти обтяження": [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'c'),],
+					"Суб'єкти обтяження": [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'v'),],
 					'Заявник': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'q'),],
 					'Власник': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'k'),],
 					'Поручитель': [(check[REGISTRY1][i][REGISTRY1_3][y][REGISTRY1_3_7],'e'),],
@@ -587,10 +683,10 @@ def second_part(check):
 					'Причина обтяження': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_4],'s'),],
 					'Деталі': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_6],'s'),
 							   (check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_9],'r'),],
-					"Суб'єкти обтяження": [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_7],'c'),],
-					'Заявник': [('',''),],
-					'Власник': [('',''),],
-					'Поручитель': [('',''),],
+					"Суб'єкти обтяження": [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_7],'j'),],
+					'Заявник': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_7],'y'),],
+					'Власник': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_7],'u'),],
+					'Поручитель': [(check[REGISTRY1][i][REGISTRY1_4][y][REGISTRY1_4_7],'c'),],
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
@@ -611,7 +707,7 @@ def second_part(check):
 								   (check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_1],''),],
 						"Суб'єкти обтяження": [('',''),],
 						'Заявник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_7],''),],
-						'Власник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_6],'n'),],
+						'Власник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_6],'f'),],
 						'Поручитель': [('',''),],
 				}
 				for key in fields:
@@ -657,8 +753,8 @@ def second_part(check):
 								   (check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_9],''),
 								   (check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_11],''),],		   
 						"Суб'єкти обтяження": [('',''),],
-						'Заявник': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_6],''),],
-						'Власник': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_7],'n'),],
+						'Заявник': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_6],'f'),],
+						'Власник': [(check[REGISTRY4][i][REGISTRY4_1][y][REGISTRY4_1_7],'f'),],
 						'Поручитель': [('',''),],
 				}
 				for key in fields:
