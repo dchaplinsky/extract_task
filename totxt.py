@@ -378,6 +378,26 @@ def first_lvl_extraction(data,GROUP_PARAMS):
 	p = re.findall(GROUP_PARAMS[0][1],data,re.U|re.S)
 	return p
 
+def shorten(p):
+	p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
+				p,re.U|re.I|re.S)
+	if p1:
+		return "TOB " + p1.group(1) + DIV
+
+	p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
+				p,re.U|re.I|re.S)
+
+	if p2:
+		return "ПАТ " + p2.group(1) + DIV
+
+	p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
+				p,re.U|re.I|re.S)
+	if p3:
+		return "АКБ " + p3.group(1) + DIV
+	
+	return p + DIV
+
+
 def recieve_value(lst):
 
 	"""applies a rule to the value and returns its string representation
@@ -403,23 +423,10 @@ def recieve_value(lst):
 			elif elem[1] == 't':
 				result += elem[0][:10] + DIV
 			elif elem[1] == 'k':
-				p = re.search(r'Іпотекодавець:(.*?)(?:|^.)(?:Іпотекодержатель|Майновий поручитель|$)',
+				p = re.search(r'Іпотекодавець:(.*?)(?:|^.)(?:Іпотекодержатель|Майновий поручитель|Боржник|$)',
 								elem[0],re.U|re.S)
 				if p:
-					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					if p1:
-						result += "TOB " + p1.group(1) + DIV
-					elif p2:
-						result += "ПАТ " + p2.group(1) + DIV
-					elif p3:
-						result += "АКБ " + p3.group(1) + DIV
-					else:
-						result += p.group(1) + DIV
+					result += shorten(p.group(1))
 			elif elem[1] == 'd':
 				p = re.search(r'(.*?)(?:, адреса:)',
 								elem[0],re.U|re.S)
@@ -435,56 +442,17 @@ def recieve_value(lst):
 			elif elem[1] == 'z':
 				result += REGISTRY4_1_10 + ": " + elem[0] + DIV
 			elif elem[1] == 'f':
-				p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
-							elem[0],re.U|re.I|re.S)
-				p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
-							elem[0],re.U|re.I|re.S)
-				p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
-							elem[0],re.U|re.I|re.S)
-				if p1:
-					result += "TOB " + p1.group(1) 
-				elif p2:
-					result += "ПАТ " + p2.group(1) 
-				elif p3:
-					result += "АКБ " + p3.group(1) 
-				else:
-					result += elem[0] 
+				result += shorten(elem[0])
 			elif elem[1] == 'q':
 				p = re.search(r'Іпотекодержатель:(.*?)(?:|^.)(?:Іпотекодавець|Майновий поручитель|Боржник|$)',
 								elem[0],re.U|re.S)
 				if p:
-					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					if p1:
-						result += "TOB " + p1.group(1) + DIV
-					elif p2:
-						result += "ПАТ " + p2.group(1) + DIV
-					elif p3:
-						result += "АКБ " + p3.group(1) + DIV
-					else:
-						result += p.group(1) + DIV
+					result += shorten(p.group(1))
 			elif elem[1] == 'e':
-				p = re.search(r'Майновий поручитель:(.*?)(?:|^.)(?:Іпотекодавець|Іпотекодержатель|$)',
+				p = re.search(r'Майновий поручитель:(.*?)(?:|^.)(?:Іпотекодавець|Іпотекодержатель|Боржник|$)',
 								elem[0],re.U|re.S)
 				if p:
-					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					if p1:
-						result += "TOB " + p1.group(1) + DIV
-					elif p2:
-						result += "ПАТ " + p2.group(1) + DIV
-					elif p3:
-						result += "АКБ " + p3.group(1) + DIV
-					else:
-						result += p.group(1) + DIV
+					result += shorten(p.group(1))
 				p = re.search(r'(Боржник.*?)(?:Заявник|$)',elem[0],re.U|re.S)
 				if p:
 					p1 = re.compile(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю)')
@@ -507,41 +475,15 @@ def recieve_value(lst):
 					result = p1.sub(' ',result)
 					result += DIV
 			elif elem[1] == 'y':
-				p = re.search(r'Обтяжувач:(.*?)(?:|^.)(?:Особа, майно/права|$)',
+				p = re.search(r'Обтяжувач:(.*?)(?:|^.)(?:Особа, майно/права|Зміст|Боржник|Опис предмета|$)',
 								elem[0],re.U|re.S)
 				if p:
-					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					if p1:
-						result += "TOB " + p1.group(1) + DIV
-					elif p2:
-						result += "ПАТ " + p2.group(1) + DIV
-					elif p3:
-						result += "АКБ " + p3.group(1) + DIV
-					else:
-						result += p.group(1) + DIV
+					result += shorten(p.group(1))
 			elif elem[1] == 'u':
-				p = re.search(r'Особа, майно/права якої обтяжуються:(.*?)(?:|^.)(?:Обтяжувач|Опис предмета|$)',
+				p = re.search(r'Особа, майно/права якої обтяжуються:(.*?)(?:|^.)(?:Обтяжувач|Зміст|Боржник|Опис предмета|$)',
 								elem[0],re.U|re.S)
 				if p:
-					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					if p1:
-						result += "TOB " + p1.group(1) + DIV
-					elif p2:
-						result += "ПАТ " + p2.group(1) + DIV
-					elif p3:
-						result += "АКБ " + p3.group(1) + DIV
-					else:
-						result += p.group(1) + DIV
+					result += shorten(p.group(1))
 			elif elem[1] == 'v':
 				p = re.compile(r'(?:Іпотекодавець):(.*?)(?=Іпотекодержатель|Майновий поручитель|Боржник|Заявник|$)')
 				tmp= p.sub('',elem[0])
@@ -828,9 +770,9 @@ def convert_many(mask, out_file):
 		u'Дата обтяження',
 		u'Причина обтяження',
 		u'Деталі',
-		u'Заявник',
-		u'Власник',
-		u'Поручитель',
+		u'Заявник/Обтяжувач/Іпотекодержатель',
+		u'Власник/Іпотекодавець',
+		u'Поручитель/Боржник',
 		u"Iншi суб'єкти обтяження",], bold
 	)
 
