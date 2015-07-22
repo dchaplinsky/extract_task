@@ -378,6 +378,29 @@ def first_lvl_extraction(data,GROUP_PARAMS):
 	p = re.findall(GROUP_PARAMS[0][1],data,re.U|re.S)
 	return p
 
+def shorten(p):
+	if p:
+		p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
+					p.group(1),re.U|re.I|re.S)
+		if p1:
+			return "TOB " + p1.group(1) + DIV
+
+		p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
+					p.group(1),re.U|re.I|re.S)
+
+		if p2:
+			return "ПАТ " + p2.group(1) + DIV
+
+
+		p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
+					p.group(1),re.U|re.I|re.S)
+		if p3:
+			return "АКБ " + p3.group(1) + DIV
+		
+		return p.group(1) + DIV
+
+	return ""
+
 def recieve_value(lst):
 
 	"""applies a rule to the value and returns its string representation
@@ -405,21 +428,8 @@ def recieve_value(lst):
 			elif elem[1] == 'k':
 				p = re.search(r'Іпотекодавець:(.*?)(?:|^.)(?:Іпотекодержатель|Майновий поручитель|$)',
 								elem[0],re.U|re.S)
-				if p:
-					p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
-								p.group(1),re.U|re.I|re.S)
-					if p1:
-						result += "TOB " + p1.group(1) + DIV
-					elif p2:
-						result += "ПАТ " + p2.group(1) + DIV
-					elif p3:
-						result += "АКБ " + p3.group(1) + DIV
-					else:
-						result += p.group(1) + DIV
+				
+				result += shorten(p)
 			elif elem[1] == 'd':
 				p = re.search(r'(.*?)(?:, адреса:)',
 								elem[0],re.U|re.S)
