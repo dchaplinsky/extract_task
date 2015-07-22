@@ -594,8 +594,6 @@ def second_part(check):
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
-
-
 			check1[1].append(dic)
 	if check[REGISTRY3]:
 		for i in xrange(len(check[REGISTRY3])):
@@ -618,7 +616,6 @@ def second_part(check):
 				}
 				for key in fields:
 					dic[key] = recieve_value(fields[key])
-
 				check1[1].append(dic)
 		for i in xrange(len(check[REGISTRY3])):
 			for y in xrange(len(check[REGISTRY3][i][REGISTRY3_1])):
@@ -639,7 +636,6 @@ def second_part(check):
 				}
 				for key in fields:
 					dic[key] = recieve_value(fields[key])
-
 				check1[1].append(dic)
 
 	if check[REGISTRY4]:
@@ -667,7 +663,6 @@ def second_part(check):
 				}
 				for key in fields:
 					dic[key] = recieve_value(fields[key])
-
 				check1[1].append(dic)
 		for i in xrange(len(check[REGISTRY4])):
 			for y in xrange(len(check[REGISTRY4][i][REGISTRY4_2])):
@@ -688,13 +683,11 @@ def second_part(check):
 				}
 				for key in fields:
 					dic[key] = recieve_value(fields[key])
-
 				check1[1].append(dic)
 	return check1
 
 def convert_one(fname):
 	output_file = tempfile.mktemp(prefix="yes_i_know_you_deprecated")
-
 
 	"""
 	pdftotext - is installed poppler-utils package for PDF to text conversion;
