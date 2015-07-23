@@ -245,7 +245,7 @@ GROUP_REG1_4 = (
 	(REGISTRY1_4_6,r'Вид обтяження: (.*?)\n(Відомості|$)'),
 	(REGISTRY1_4_7,r'Відомості про суб’єктів\nобтяження:(.*?)($|ВІДОМОСТІ|Відомості|Вид|Опис)'),
 	(REGISTRY1_4_8,r'Відомості про реєстрацію\nдо 01.01.2013р.:\n(.*?)(Відомості|Актуальна|Зміст|$)'),
-	(REGISTRY1_4_9,r'Опис предмета\nобтяження:(.*?)(?:Актуальна|Додаткові|Відомості|ВІДОМОСТІ|$)'),
+	(REGISTRY1_4_9,r'(?:Опис предмета\nобтяження|Зміст, характеристика\nобтяження):(.*?)(?:Актуальна|Додаткові|Відомості|ВІДОМОСТІ|$)'),
 )
 
 GROUP_REG2 = (
@@ -301,7 +301,7 @@ GROUP_REG3_2 = (
 	(REGISTRY3_2_3,r'Зареєстровано:(?:.|..)(.*?)\nПідстава обтяження'),
 	(REGISTRY3_2_4,r'Підстава обтяження:(.*?)\nОб’єкт обтяження'),
 	(REGISTRY3_2_5,r'Об’єкт обтяження: (.*?)\n(?:Власник)'),
-	(REGISTRY3_2_6,r'Власник: (.*?)\nЗаявник'),
+	(REGISTRY3_2_6,r'Власник: (.*?)\n(?:Заявник|Обтяжувач|Додаткові)'),
 	(REGISTRY3_2_7,r'Заявник: (.*?)(ВІДОМОСТІ|$)'),
 	(REGISTRY3_2_8,r'Додаткові дані:(.*?)\n(ВІДМІТКА|$)'),
 )
@@ -379,24 +379,47 @@ def first_lvl_extraction(data,GROUP_PARAMS):
 	return p
 
 def shorten(p):
-	p1 = re.search(r'Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю) (.*?\d{8})',
+	p1 = re.search(r'(?:Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю)|товариство з обмеженою відповідальністю) (.*?\d{8})',
 				p,re.U|re.I|re.S)
 	if p1:
 		return "TOB " + p1.group(1) + DIV
 
-	p2 = re.search(r'П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство) (.*?\d{8})',
+	p2 = re.search(r'(?:П(?:УБЛІЧНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ублічне акціонерне товариство)|публічне акціонерне товариство) (.*?\d{8})',
 				p,re.U|re.I|re.S)
 
 	if p2:
 		return "ПАТ " + p2.group(1) + DIV
 
-	p3 = re.search(r'А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк) (.*?\d{8})',
+	p3 = re.search(r'(?:А(?:КЦІОНЕРНО-КОМЕРЦІЙНИЙ БАНК|кціонерно-комерційний банк)|акціонерно-комерційний банк) (.*?\d{8})',
 				p,re.U|re.I|re.S)
 	if p3:
 		return "АКБ " + p3.group(1) + DIV
-	
-	return p + DIV
 
+	p4 = re.search(r'(?:П(?:РИВАТНЕ АКЦІОНЕРНЕ ТОВАРИСТВО|риватне акціонерне товариство)|приватне акціонерне товариство) (.*?\d{8})',
+				p,re.U|re.I|re.S)
+	if p4:
+		return "ПрАТ " + p4.group(1) + DIV
+
+	p5 = re.search(r'(?:А(?:КЦІОНЕРНА КОМПАНІЯ З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|кціонерна компанія з обмеженою відповідальністю)|акціонерна компанія з обмеженою відповідальністю)',
+				p,re.U|re.I|re.S)
+	if p5:
+		return "АК з ОВ " + p5.group(1) + DIV
+	p6 = re.search(r'(?:В(?:ІДКРИТЕ АКЦІОНЕРНЕ ТОВАРИСТВО|ідкрите акціонерне товариство)|відкрите акціонерне товариство)',
+				p,re.U|re.I|re.S)
+
+	if p6:
+		return "ВАТ " + p6.group(1) + DIV
+	p7 = re.search(r'(?:З(?:АКРИТЕ АКЦІОНЕРНЕ ТОВАРИСТВО|акрите акціонерне товариство)|закрите акціонерне товариство)',
+				p,re.U|re.I|re.S)
+
+	if p7:
+		return "ЗАТ " + p7.group(1) + DIV
+
+	p8 = re.search(r'(?:Т(?:ОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ|овариство з обмеженою відповідальністю)|товариство з обмеженою відповідальністю)',
+				p,re.U|re.I|re.S)
+	if p8:
+		return "TOB " + p8.group(1) + DIV
+	return p + DIV
 
 def recieve_value(lst):
 
@@ -443,6 +466,7 @@ def recieve_value(lst):
 				result += REGISTRY4_1_10 + ": " + elem[0] + DIV
 			elif elem[1] == 'f':
 				result += shorten(elem[0])
+				result = result.replace(DIV,'')
 			elif elem[1] == 'q':
 				p = re.search(r'Іпотекодержатель:(.*?)(?:|^.)(?:Іпотекодавець|Майновий поручитель|Боржник|$)',
 								elem[0],re.U|re.S)
@@ -475,12 +499,12 @@ def recieve_value(lst):
 					result = p1.sub(' ',result)
 					result += DIV
 			elif elem[1] == 'y':
-				p = re.search(r'Обтяжувач:(.*?)(?:|^.)(?:Особа, майно/права|Зміст|Боржник|Опис предмета|$)',
+				p = re.search(r'Обтяжувач:(.*?)(?:|^.)(?:Особа, майно/права|Боржник|Опис предмета|$)',
 								elem[0],re.U|re.S)
 				if p:
 					result += shorten(p.group(1))
 			elif elem[1] == 'u':
-				p = re.search(r'Особа, майно/права якої обтяжуються:(.*?)(?:|^.)(?:Обтяжувач|Зміст|Боржник|Опис предмета|$)',
+				p = re.search(r'Особа, майно/права якої обтяжуються:(.*?)(?:|^.)(?:Обтяжувач|Боржник|Опис предмета|$)',
 								elem[0],re.U|re.S)
 				if p:
 					result += shorten(p.group(1))
@@ -569,6 +593,7 @@ def second_part(check):
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
+
 			check1[0].append(dic)
 	if check[REGISTRY2]:
 		for i in xrange(len(check[REGISTRY2][0][REGISTRY2_2])):
@@ -589,6 +614,7 @@ def second_part(check):
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
+
 			check1[0].append(dic)
 	#second table
 	for i in xrange(len(check[REGISTRY1])):
@@ -632,6 +658,7 @@ def second_part(check):
 			}
 			for key in fields:
 				dic[key] = recieve_value(fields[key])
+
 			check1[1].append(dic)
 	if check[REGISTRY3]:
 		for i in xrange(len(check[REGISTRY3])):
@@ -648,12 +675,13 @@ def second_part(check):
 						'Деталі': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_5],'d'),
 								   (check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_1],''),],
 						"Суб'єкти обтяження": [('',''),],
-						'Заявник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_7],''),],
+						'Заявник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_7],'f'),],
 						'Власник': [(check[REGISTRY3][i][REGISTRY3_2][y][REGISTRY3_2_6],'f'),],
 						'Поручитель': [('',''),],
 				}
 				for key in fields:
 					dic[key] = recieve_value(fields[key])
+
 				check1[1].append(dic)
 		for i in xrange(len(check[REGISTRY3])):
 			for y in xrange(len(check[REGISTRY3][i][REGISTRY3_1])):
@@ -674,6 +702,7 @@ def second_part(check):
 				}
 				for key in fields:
 					dic[key] = recieve_value(fields[key])
+
 				check1[1].append(dic)
 
 	if check[REGISTRY4]:
@@ -701,6 +730,7 @@ def second_part(check):
 				}
 				for key in fields:
 					dic[key] = recieve_value(fields[key])
+
 				check1[1].append(dic)
 		for i in xrange(len(check[REGISTRY4])):
 			for y in xrange(len(check[REGISTRY4][i][REGISTRY4_2])):
@@ -721,6 +751,7 @@ def second_part(check):
 				}
 				for key in fields:
 					dic[key] = recieve_value(fields[key])
+
 				check1[1].append(dic)
 	return check1
 
