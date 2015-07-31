@@ -858,7 +858,7 @@ def convert_one(fname):
 		-raw   Keep the text in content stream order;
 		-nopgbrk  Don’t insert page breaks between  pages.
 	""" 
-	os.system('pdftotext -raw -nopgbrk {0} {1}'.format(
+	os.system('pdftotext -raw -nopgbrk "{0}" "{1}"'.format(
 		fname, output_file))
 
 	with open(output_file, 'rb') as f:
@@ -905,8 +905,8 @@ def convert_many(mask, out_file):
 
 	for check1,fname in to_export:
 		for item in check1[0]:
-			worksheet.write(row,0,fname)
-			worksheet.write(row,1,item['Параметри запиту'].decode('utf-8'))
+			worksheet.write(row,0, fname.decode('utf-8'))
+			worksheet.write(row,1, item['Параметри запиту'].decode('utf-8'))
 			names = ['Дата регистрации','Власник',
 				 'Характеристики нерухомості','Підстава власності',
 				 'Форма власності','Частка',
@@ -917,8 +917,8 @@ def convert_many(mask, out_file):
 			row += 1
 	
 		for item in check1[1]:
-			worksheet.write(row,0,fname)
-			worksheet.write(row,1,item['Параметри запиту'].decode('utf-8'))
+			worksheet.write(row, 0, fname.decode('utf-8'))
+			worksheet.write(row, 1, item['Параметри запиту'].decode('utf-8'))
 			names = ['Дата регистрации','Причина обтяження','Деталі',
 				 'Заявник','Власник','Поручитель',"Суб'єкти обтяження",
 			]
