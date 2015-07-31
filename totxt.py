@@ -611,14 +611,12 @@ def first_part(text):
 	data = separate(text,GROUP_ALL) 
 	#gets params of qwerty
 	data[FETCH_PARAMS] = separate(data[FETCH_PARAMS],GROUP_OBJECT)
-	#print data[REGISTRY3]
 	#gets all possible records for each group in 'data' dictionary
 	groups = [(REGISTRY1,GROUP_OBJECT1),(REGISTRY2,GROUP_OBJECT2),
 			  (REGISTRY3,GROUP_OBJECT3),(REGISTRY4,GROUP_OBJECT4)
 	]
 	for group in groups:
 		data[group[0]] = first_lvl_extraction(data[group[0]],group[1])
-	#print data[REGISTRY3]
 	#first level extractions for each group in 'data' dictionary
 	dic = {
 		REGISTRY1: [GROUP_REG1,[(REGISTRY1_1,GROUP_REG1_1),(REGISTRY1_2,GROUP_REG1_2),
@@ -630,7 +628,6 @@ def first_part(text):
 	for key in dic.keys():
 		for i in xrange(len(data[key])):
 			data[key][i] = second_lvl_extraction(data[key][i],dic[key][0]) 
-			#print data[key]
 			groups = dic[key][1]
 			for group in groups:
 				#special fields that need preprocess extractions
